@@ -1,0 +1,18 @@
+{
+    "name": "Bomb Flip",
+    "summary": "A thrilling strategic puzzle game where every flip could be your last!",
+    "description": "Bomb Flip is an adrenaline-pumping puzzle game that puts your nerves and strategy to the ultimate test. Dive into a grid of hidden cards where fortunes and explosives lie in wait. Your mission: flip cards, amass coins, and escape before the bombs explode and end your run!\n\nPay attention to:\n- Time: The bombs are ticking! Flip cards quickly to collect coins, but don't wait too long or it's game over.\n- Grid sums: The numbers around the grid provide crucial information. For each row and column, you'll see two numbers:\n  • The first number is the total points (coin values) in that row or column.\n  • The second number is the count of bombs in that row or column.\n- High value cards: To complete a level, you must flip all the high value cards (2x and 3x) without hitting a bomb. This is crucial for advancing!\n- Scanner uses: These precious tools let you peek at cards without flipping. Use them wisely to avoid bombs!\n- Folding option: You can end the level early to secure half of current level coins. Is it better to fold or risk it for more?\n\nControls:\n- E or START: Begin the game\n- Arrow keys: Navigate the grid\n- Z or A1: Flip a card\n- X or A2: Use scanner (when available)\n- W or SELECT: Fold (end the level early)\n\nAs you advance, face new challenges:\n- Expanding grid sizes offer more coins but hide more dangers.\n- Increasing bomb counts with tighter time limits raise the stakes with each level.\n- Strategic use of scanner abilities becomes crucial for survival.\n\nYour goal? Achieve the highest score possible by collecting coins across multiple levels before the final explosion. But remember, greed can be deadly - know when to fold and run with your riches!\n\nDo you have the courage to chase high scores, or will you play it safe? Every decision counts in Bomb Flip - a game where fortune favors the bold, but only the quick survive. Are you ready to put your skills to the test?",
+    "tags": [
+        "puzzle",
+        "strategy",
+        "card",
+        "2d",
+        "bomb",
+        "time-pressure",
+        "flip"
+    ],
+  "authors": [{
+"name": "Paolo De Marinis",
+"link": "https://x.com/PaoloCTSI"
+}]
+}
