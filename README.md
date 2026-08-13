@@ -2,145 +2,106 @@
 
 ![Bomb Flip: timed strategy puzzle gameplay](docs/media/bomb-flip-hero.png)
 
-Bomb Flip is a timed strategy-puzzle RIVES cartridge inspired by Voltorb Flip from Pokémon HeartGold and SoulSilver. Each hidden card contains a ×1, ×2 or ×3 coin, or a bomb; row and column clues show the value sum and bomb count.
-
-## Inspiration and independent design
-
-Bomb Flip deliberately starts from the mathematical core of Voltorb Flip: a hidden grid with values 0, 1, 2 and 3, two clues for every row and column, and a completion condition that requires revealing every ×2 and ×3 card while avoiding zero-value hazards. Bomb Flip level 1 also uses the same composition as one of Voltorb Flip's level-1 board types: 6 hazards, three ×2 cards and one ×3 card.
-
-The implementation is not a reproduction of the original game. Bomb Flip introduces its own additive score and time economy, a countdown extended by safe cards, scanner previews, a fold-for-half stopping rule, twelve sequential levels and 6 × 6 boards from level 9 onward. Its later level compositions are custom. Voltorb Flip instead uses multiplicative coin payouts, a memo pad, eight 5 × 5 levels, several board configurations per level, generator constraints that reject overly easy boards, and history-dependent level changes.
-
-The detailed [mathematics and design comparison](docs/mathematics.md) derives the shared clue equations, generalizes the classic dead-line rule to Bomb Flip's 6 × 6 boards, and documents the generator, probability, scoring and feature differences with sources.
-
-Bomb Flip is an independent, unaffiliated RIVES cartridge. Pokémon, Pokémon HeartGold and SoulSilver, Voltorb Flip and related names belong to their respective rights holders.
-
-## Original RIVES cartridge
+Bomb Flip is a timed strategy-puzzle RIVES cartridge inspired by Voltorb Flip from *Pokémon HeartGold* and *SoulSilver*. Each hidden card contains a ×1, ×2 or ×3 coin, or a bomb. Every row and column reports its value sum and bomb count.
 
 - [Play the original Bomb Flip cartridge on RIVES](https://app.rives.io/cartridges/5932d82f5827)
-- [Paolo's RIVES profile](https://app.rives.io/profile/0x2e092f91bc25ebd12b8b0e4df87d9d0424d6460c) — the profile lists the two original cartridges
-- [Cartesi Ecosystem Recap #14 — Bomb Flip featured as Paolo's RIVES cartridge](https://cartesi.io/blog/ecosystem-recap-202410/)
-- Original publication: 5 October 2024, under the RIVES profile **Paolo**
+- [Cartesi Ecosystem Recap #14](https://cartesi.io/blog/ecosystem-recap-202410/)
+- [Paolo's RIVES profile](https://app.rives.io/profile/0x2e092f91bc25ebd12b8b0e4df87d9d0424d6460c)
 
-## About this repository
+The original cartridge was published on 5 October 2024.
 
-This repository contains a maintained, post-publication version of the Bomb Flip cartridge originally published on RIVES. The exact source snapshot corresponding to the original published cartridge is no longer retained; the current codebase includes subsequent fixes, cleanup, documentation and refactoring.
+## Relation to Voltorb Flip
 
-Only the maintained source and the assets required to build it are included here; working archives and extracted copies of the original cartridge are intentionally excluded.
+Bomb Flip keeps the central clue system, card values and completion rule of Voltorb Flip: reveal every ×2 and ×3 while avoiding the zero-value hazards. Its first level also uses one of the original game's level-1 compositions.
 
-The current maintained version is developed with assistance from OpenAI Codex.
+The rest of the progression was redesigned for this cartridge:
 
-## Development
+- safe cards give an additive score and extra time;
+- the run has a countdown;
+- scanners temporarily preview hidden cards;
+- Fold ends the run and banks half of the current level score;
+- there are twelve sequential levels;
+- levels 9–12 use a 6 × 6 grid.
 
-Bomb Flip was developed in C against the RIV API (`riv.h`) through a Cursor-assisted workflow. Paolo De Marinis adapted the Voltorb Flip-inspired puzzle core into a timed RIVES cartridge and designed Bomb Flip's distinct timer, additive scoring, scanner, folding, extended progression and larger late-game boards. He directly wrote and modified parts of the code and handled integration, testing, debugging and refinement.
+Voltorb Flip instead uses multiplicative payouts, a memo pad, eight 5 × 5 levels, multiple board types and history-dependent progression. The shared model and the differences are documented with sources in [Mathematics and design](docs/mathematics.md).
 
-## Technical reading path
+Bomb Flip is an independent, unaffiliated cartridge. Pokémon and related names belong to their respective rights holders.
 
-The documentation moves from the mathematical model to its implementation:
+## What is in this repository
 
-1. [Mathematics and design lineage](docs/mathematics.md) — inherited constraints, Bomb Flip-specific choices, derivations, worked examples and source attribution.
-2. [Code overview](docs/code-overview.md) — state, frame flow, rules, rendering and RIVES integration.
-3. [Validation](docs/validation.md) — reproducible checks and stated limits of the available regression evidence.
+This is the maintained version of the source, not an archival copy of the cartridge published in 2024. The exact publication snapshot is no longer retained. The present code contains later fixes, tests, documentation and refactoring; the published cartridge remains available at the RIVES link above.
 
-## Gameplay
+Paolo De Marinis designed the Bomb Flip rules, scoring, timer, scanners, folding system and level progression, and wrote most of the original gameplay code. Cursor was used mainly for animation work and as implementation support. Paolo integrated, tested, debugged and refined the complete cartridge. Current maintenance also uses OpenAI Codex.
 
-Reveal every ×2 and ×3 card without selecting a bomb. Revealed coin cards add score and time. Scanner cards grant limited previews, while folding ends the run and keeps half of the current level's coins. The board grows from 5 × 5 to 6 × 6 across twelve levels.
+## Gameplay and controls
+
+Reveal every ×2 and ×3 without selecting a bomb. Safe cards add coins and time. Scanner cards grant a limited number of previews. Fold ends the run and keeps half of the coins earned in the current level.
 
 ![Bomb Flip gameplay: title, board navigation, Fold decision and Scanner preview](docs/media/bomb-flip-gameplay.gif)
 
-The animation is a deterministic replay of the normal cartridge build: it starts a run, moves across the hidden board, opens and closes Fold, reveals a Scanner and uses its preview. No debug or cheat build is shown.
-
-| Live board and Scanner | Fold decision |
-|---|---|
-| ![Bomb Flip live board with one revealed Scanner](docs/media/bomb-flip-gameplay.png) | ![Bomb Flip Fold confirmation screen](docs/media/bomb-flip-fold.png) |
-
 | Action | Keyboard | RIVES gamepad |
-|---|---|---|
-| Start | Z or E | A1 or START |
+| --- | --- | --- |
+| Start | Z or E | A1 or Start |
 | Move selection | Arrow keys | D-pad |
 | Reveal card | Z | A1 |
 | Use scanner | X | A2 |
-| Open / close Fold | W or F | SELECT or R2 |
+| Open / close Fold | W or F | Select or R2 |
 | Confirm Fold | Z | A1 |
 
-Fold can be opened or closed with either W/SELECT or the mnemonic F/R2 shortcut. Inside the dialog, the ordinary action button Z/A1 confirms the run-ending decision. E/START is reserved for starting the run and has no Fold-dialog role.
+E/Start begins a run but does not confirm Fold. Scanner preview and Fold confirmation are modal: the countdown and sequenced background music pause while they are open, so using an information or stopping action does not cost game time.
 
-## Technical overview
+## Reading the code
 
-`main()` configures the RIVES console and dispatches the title, transition, active run and ending. `GameState` stores the board, score, timer, scanner data and one explicit gameplay phase; separate title and audio structures own their respective state. Board mathematics, rules, rendering, title animation and audio are isolated in small C modules. Input is read from `riv->keys`, visuals use RIVES drawing primitives, and `riv_snprintf()` writes the current outcard.
+Start with these files:
 
-The implementation is procedural C, not object-oriented code. See [the code overview](docs/code-overview.md) for the full frame flow, data structures, interactions and RIVES calls. The [mathematics and design comparison](docs/mathematics.md) formalizes the board matrix, clue constraints, level composition and fold decision, and compares them with the source of inspiration.
+1. `src/bombflip.c` owns the application loop and switches between title, transition, game and ending.
+2. `src/state.h` defines the complete game and application state.
+3. `src/game.c` contains the timer, input, scanner, Fold and outcome rules.
+4. `src/board.c` contains the twelve level compositions, generator and clues.
+5. `src/render.c` draws the board, interface and dialogs.
+
+`src/title.c` contains the title and transition animations. `src/audio.c` owns the sequencer and sound effects. Debug logging and the level-completion cheat are controlled independently by `DEBUG_MODE` and `CHEATS_ENABLED`, both disabled by default.
+
+The program is procedural C. The game phase is explicit, and `game_update()` shows the order in which timer, input, animations and terminal states are handled.
+
+## Board mathematics
+
+Represent the board by a matrix $A=(a_{ij})$ with entries in $\{0,1,2,3\}$. For row $i$,
+
+~~~math
+s_i=\sum_j a_{ij},\qquad
+b_i=\sum_j [a_{ij}=0],
+~~~
+
+and the column clues are defined in the same way. Because every non-bomb card is at least 1, a line of length $n$ is certainly free of ×2 and ×3 cards when
+
+~~~math
+s_i+b_i=n.
+~~~
+
+For Bomb Flip, $n=5$ in levels 1–8 and $n=6$ in levels 9–12. The equations are inherited from the source of inspiration; the additive score, time economy, scanner, Fold rule and extended level table are Bomb Flip-specific choices.
 
 ![Worked Bomb Flip clue model for a 6 × 6 board](docs/media/bomb-flip-clue-model.svg)
 
-The exposed board above is a level-9-compatible mathematical example, not a gameplay reveal: it shows how every row and column produces a value-sum/bomb-count pair. The full derivation and level progression are in the [mathematics document](docs/mathematics.md).
+The diagram is a mathematical example compatible with level 9, not a screenshot of a fully revealed run.
 
-## Code structure
+## Building
 
-- `src/bombflip.c` — application entry point and top-level RIVES screen dispatch.
-- `src/state.h` — shared constants and explicit application/game state types.
-- `src/board.c` — level table, fixed-count generator, clues and board predicates.
-- `src/game.c` — input, score, timer, scanner, fold and outcome rules.
-- `src/render.c` — board, interface, dialogs and gameplay animations.
-- `src/title.c` — title, transition and easter-egg sequence.
-- `src/audio.c` — background sequencer ownership and sound effects.
-- `src/riv.h` — preserved RIVES API header used by the source and host checks.
-- `src/seqt.h` — small sequenced-audio helper used by the background track.
-- `src/songs/` — RIVES music asset.
-- `src/info.json` and `src/cover.png` — cartridge metadata and cover.
-- `docs/` — technical architecture and validation notes.
+Running an existing cartridge requires [RIVEMU](https://rives.io/docs/riv/getting-started/). Compiling the C source also requires the [RIV SDK](https://rives.io/docs/riv/developing-cartridges/). The Makefile uses these default paths:
 
-## Debug mode
-
-`DEBUG_MODE` and `CHEATS_ENABLED` default independently to `0` in `src/state.h`. `DEBUG_MODE=1` enables diagnostic logging without altering the controls. `CHEATS_ENABLED=1` separately compiles and tracks the R1 level-completion helper. The two flags can be enabled alone or together; scanner, timer and normal gameplay are unchanged.
-
-## Technical documentation
-
-- [Code overview](docs/code-overview.md)
-- [Mathematics and design comparison](docs/mathematics.md)
-- [Validation](docs/validation.md)
-
-## Related RIVES cartridge
-
-- [Slither Slide source repository](https://github.com/paolo-de-marinis/slither-slide)
-- [Play the original Slither Slide cartridge on RIVES](https://app.rives.io/cartridges/7654435bf067)
-
-## Prerequisites: RIVEMU and the RIV SDK
-
-This cartridge uses the official [RIV framework and RIVEMU repository](https://github.com/rives-io/riv). RIVEMU is sufficient to run an already-built cartridge; compiling the C sources also requires the RIV SDK.
-
-For complete and platform-specific instructions, see the official RIVES guides:
-
-- [Installing RIVEMU](https://rives.io/docs/riv/getting-started/)
-- [Installing the SDK and developing cartridges](https://rives.io/docs/riv/developing-cartridges/)
-
-The following Linux x86_64 setup matches the default paths used by this repository's Makefile:
-
-~~~sh
-mkdir -p "$HOME/.riv"
-
-wget -O "$HOME/.riv/rivemu" \
-  https://github.com/rives-io/riv/releases/latest/download/rivemu-linux-amd64
-chmod +x "$HOME/.riv/rivemu"
-
-wget -O "$HOME/.riv/rivos-sdk.ext2" \
-  https://github.com/rives-io/riv/releases/latest/download/rivos-sdk.ext2
+~~~text
+~/.riv/rivemu
+~/.riv/rivos-sdk.ext2
 ~~~
 
-Verify both components:
+Build and run:
 
 ~~~sh
-"$HOME/.riv/rivemu" -version
-
-RIVEMU_SDK="$HOME/.riv/rivos-sdk.ext2" \
-  "$HOME/.riv/rivemu" -quiet -no-window -sdk \
-  -exec /usr/lib/libriv.so version
+make -C src clean all
+make -C src run
 ~~~
 
-The maintained refactor is verified with RIVEMU and `libriv` 0.3.0, including a 96 MB runtime smoke test and the official web emulator, as recorded in [Validation](docs/validation.md). For another operating system or architecture, download the matching RIVEMU binary from the [official releases](https://github.com/rives-io/riv/releases) and pass its path to `make`.
-
-## Building and running
-
-By default, the Makefile reads RIVEMU and the SDK from `~/.riv`. To use different locations, override `RIVEMU` and `RIVEMU_SDK`:
+For different locations:
 
 ~~~sh
 make -C src \
@@ -149,30 +110,24 @@ make -C src \
   clean all
 ~~~
 
-With the default installation above:
-
-~~~sh
-make -C src clean all
-make -C src run
-~~~
-
-The default `all` target follows the [official optimized-cartridge workflow](https://rives.io/docs/riv/developing-cartridges/#compiling-optimized-cartridges): every source module is compiled with `riv-opt-flags -Ospeed`, then `riv-strip` removes non-runtime ELF data from the linked executable before `riv-mksqfs` packages the cartridge.
-
-Checks:
+Local checks:
 
 ~~~sh
 make -C src strict test
 make -C src smoke
 ~~~
 
-`strict` performs a warning-free C11 analysis, `test` checks mathematical invariants and outcome rules on the host, and `smoke` runs the packaged RIVES cartridge headlessly for 180 frames.
+`strict` compiles all production modules as warning-free C11 in release, debug and cheats configurations. `test` checks board invariants and game outcomes with a deterministic host test double. `smoke` starts the packaged cartridge headlessly for 180 frames. The latest recorded build and 96 MB runtime check used RIVEMU/libriv and RIV OS SDK 0.3.0; see [Validation](docs/validation.md).
 
-## Repository history
+## Documentation
 
-This repository begins from the maintained source available after the original 2024 publication, not from an exact archival snapshot of the published cartridge. The published RIVES cartridge remains available through the link above, while local working archives and cleanup history are intentionally not part of this repository. The later cleanup does not establish historical authorship of individual parts of the original cartridge.
+- [Mathematics and design](docs/mathematics.md)
+- [Code overview](docs/code-overview.md)
+- [Validation](docs/validation.md)
+- [Third-party notices](THIRD_PARTY_NOTICES.md)
+
+Related project: [Slither Slide source](https://github.com/paolo-de-marinis/slither-slide) · [original Slither Slide cartridge](https://app.rives.io/cartridges/7654435bf067)
 
 ## License
 
-Except for the third-party material listed in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md), the source code, documentation and original assets in this repository are Copyright © 2024–2026 Paolo De Marinis and licensed under the [GNU General Public License v3.0 or later](LICENSE) (`GPL-3.0-or-later`).
-
-As copyright holder, Paolo De Marinis also offers under `GPL-3.0-or-later` all prior versions of his original material recorded in this repository's Git history. This present grant does not relicense third-party material or contributions owned by others.
+Except for the material listed in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md), the source, documentation and original assets are Copyright © 2024–2026 Paolo De Marinis and licensed under the [GNU General Public License v3.0 or later](LICENSE).

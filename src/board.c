@@ -4,18 +4,18 @@
 #include <riv.h>
 
 static const LevelConfig LEVEL_CONFIGS[MAX_LEVEL] = {
-    {.x2Cards = 3, .x3Cards = 1, .bombs = 6, .legacyMinimumReward = 24, .legacyMaximumReward = 48},
-    {.x2Cards = 4, .x3Cards = 2, .bombs = 7, .legacyMinimumReward = 54, .legacyMaximumReward = 108},
-    {.x2Cards = 5, .x3Cards = 3, .bombs = 8, .legacyMinimumReward = 96, .legacyMaximumReward = 192},
-    {.x2Cards = 6, .x3Cards = 3, .bombs = 8, .legacyMinimumReward = 192, .legacyMaximumReward = 384},
-    {.x2Cards = 7, .x3Cards = 4, .bombs = 10, .legacyMinimumReward = 288, .legacyMaximumReward = 576},
-    {.x2Cards = 8, .x3Cards = 4, .bombs = 10, .legacyMinimumReward = 480, .legacyMaximumReward = 960},
-    {.x2Cards = 8, .x3Cards = 5, .bombs = 10, .legacyMinimumReward = 720, .legacyMaximumReward = 1440},
-    {.x2Cards = 10, .x3Cards = 5, .bombs = 10, .legacyMinimumReward = 1080, .legacyMaximumReward = 2160},
-    {.x2Cards = 7, .x3Cards = 3, .bombs = 13, .legacyMinimumReward = 1500, .legacyMaximumReward = 3000},
-    {.x2Cards = 8, .x3Cards = 3, .bombs = 14, .legacyMinimumReward = 2000, .legacyMaximumReward = 4000},
-    {.x2Cards = 9, .x3Cards = 3, .bombs = 15, .legacyMinimumReward = 2500, .legacyMaximumReward = 5000},
-    {.x2Cards = 10, .x3Cards = 3, .bombs = 16, .legacyMinimumReward = 3000, .legacyMaximumReward = 6000},
+    {.x2Cards = 3, .x3Cards = 1, .bombs = 6},
+    {.x2Cards = 4, .x3Cards = 2, .bombs = 7},
+    {.x2Cards = 5, .x3Cards = 3, .bombs = 8},
+    {.x2Cards = 6, .x3Cards = 3, .bombs = 8},
+    {.x2Cards = 7, .x3Cards = 4, .bombs = 10},
+    {.x2Cards = 8, .x3Cards = 4, .bombs = 10},
+    {.x2Cards = 8, .x3Cards = 5, .bombs = 10},
+    {.x2Cards = 10, .x3Cards = 5, .bombs = 10},
+    {.x2Cards = 7, .x3Cards = 3, .bombs = 13},
+    {.x2Cards = 8, .x3Cards = 3, .bombs = 14},
+    {.x2Cards = 9, .x3Cards = 3, .bombs = 15},
+    {.x2Cards = 10, .x3Cards = 3, .bombs = 16},
 };
 
 const LevelConfig *board_level_config(int level) {

@@ -1,528 +1,333 @@
-# Mathematics and design lineage: Bomb Flip and Voltorb Flip
+# Mathematics and design: Bomb Flip and Voltorb Flip
 
-## Scope and attribution
+Bomb Flip is directly inspired by Voltorb Flip, the minigame in the non-Japanese versions of *Pokémon HeartGold* and *SoulSilver*. Both games use hidden values $0,1,2,3$, give a value sum and hazard count for every row and column, and complete a board after every ×2 and ×3 has been revealed.
 
-Bomb Flip is inspired by Voltorb Flip, the minigame included in the non-Japanese releases of Pokémon HeartGold and SoulSilver. The inspiration is substantive: both games use hidden 0/1/2/3 values, show a value sum and hazard count for every row and column, and complete a board when every ×2 and ×3 card has been revealed.
+This note separates that inherited model from the rules designed for Bomb Flip. Bomb Flip behavior is taken from the C source in this repository. Details of the original game are checked against the [pret/pokeheartgold community decompilation](https://github.com/pret/pokeheartgold/tree/master/src/voltorb_flip) and the sources listed at the end.
 
-This document separates that shared foundation from Bomb Flip's own mathematical and gameplay choices. The maintained Bomb Flip RIVES cartridge code is the authority for Bomb Flip behavior. For the original game, exact implementation details are checked against the [pret/pokeheartgold community decompilation](https://github.com/pret/pokeheartgold/tree/master/src/voltorb_flip), which is a reconstruction of the game code rather than official Nintendo documentation.
+## 1. Shared model and Bomb Flip changes
 
-The comparison does not claim that the shared clue system, card alphabet or ×2/×3 completion rule originated in Bomb Flip. It documents how Paolo De Marinis adapted that foundation into a timed RIVES cartridge with different scoring, risk, generation and progression.
+| Inherited from Voltorb Flip | Designed for Bomb Flip |
+| --- | --- |
+| hidden 0/1/2/3 grid | additive card score |
+| row and column value sums | countdown and time rewards |
+| row and column hazard counts | scanner previews |
+| reveal all ×2 and ×3 cards | Fold for half of the current level |
+| zero-value hazard ends the round/run | twelve sequential levels |
+| one level-1 composition | 6 × 6 boards on levels 9–12 |
 
-## 1. Lineage at a glance
+Bomb Flip does not reproduce Voltorb Flip's multiplicative payout, memo pad, eight-level progression, mixture of board types or rejection of boards judged too easy.
 
-| Category | Elements |
-|---|---|
-| Clearly inherited from Voltorb Flip | hidden 0/1/2/3 grid; row and column value sums; row and column hazard counts; reveal all ×2 and ×3 cards; avoid zero-value hazards |
-| Direct numerical correspondence | Bomb Flip level 1 uses 6 bombs, three ×2 cards and one ×3 card, exactly one of Voltorb Flip's level-1 compositions |
-| Bomb Flip-specific design | additive score; countdown and time rewards; scanner previews; fold for half of current-level coins; twelve sequential levels; 6 × 6 late-game boards; one custom composition per level; no board-rejection filter |
-| Present in Voltorb Flip but not Bomb Flip | multiplicative payout; memo marks; eight fixed 5 × 5 levels; several board types per level; rejection of boards with too many risk-free multipliers; history- and cards-flipped-dependent level changes |
-
-The original rules and its five composition choices per level are summarized by [Bulbapedia](https://bulbapedia.bulbagarden.net/wiki/Voltorb_Flip). The generator details in the last row are visible in the [reconstructed game-state source](https://github.com/pret/pokeheartgold/blob/90e85d4e027f5e04800e7e015b3207094061402c/src/voltorb_flip/voltorb_flip_game.c).
-
-## 2. Shared board model
+## 2. Board and clues
 
 For a square board of side $n$, let
 
-```math
+~~~math
 A=(a_{ij})\in\{0,1,2,3\}^{n\times n},
-```
+~~~
 
-where
+where 0 is a bomb and 1, 2 and 3 are coin cards. Voltorb Flip always has $n=5$. Bomb Flip uses $n=5$ on levels 1–8 and $n=6$ on levels 9–12.
 
-- $a_{ij}=0$ is a hazard: a Voltorb in the original game and a bomb in Bomb Flip;
-- $a_{ij}=1$ is a ×1 card;
-- $a_{ij}=2$ is a ×2 card;
-- $a_{ij}=3$ is a ×3 card.
+Let $B,X_1,X_2,X_3$ be the numbers of the four card types and $N=n^2$. Then
 
-Voltorb Flip always uses $n=5$. Bomb Flip uses $n=5$ for levels 1–8 and $n=6$ for levels 9–12.
-
-Let $B,X_1,X_2,X_3$ be the numbers of the four card types and let $N=n^2$. Every board satisfies
-
-```math
+~~~math
 B+X_1+X_2+X_3=N,
-```
-
-so
-
-```math
+\qquad
 X_1=N-B-X_2-X_3.
-```
+~~~
 
-Bomb Flip's `board_clear()` initializes every active cell to 1 and the internal placement routine replaces distinct cells with the configured bombs, ×2 cards and ×3 cards.
+For row $i$, the displayed clues are
 
-## 3. Shared clue equations
+~~~math
+s_i=\sum_{j=1}^{n}a_{ij},
+\qquad
+b_i=\sum_{j=1}^{n}[a_{ij}=0].
+~~~
 
-For row $i$, both games display the value sum
+For column $j$,
 
-```math
-s_i=\sum_{j=1}^{n}a_{ij}
-```
+~~~math
+c_j=\sum_{i=1}^{n}a_{ij},
+\qquad
+d_j=\sum_{i=1}^{n}[a_{ij}=0].
+~~~
 
-and the hazard count
+The bracket is 1 when the condition is true and 0 otherwise. `board_calculate_clues()` computes these four arrays with nested loops.
 
-```math
-b_i=\sum_{j=1}^{n}I(a_{ij}=0).
-```
+![Worked 6 × 6 Bomb Flip clue model](media/bomb-flip-clue-model.svg)
 
-For column $j$, they display
+The diagram exposes one level-9-compatible board so the clues can be checked. It is a mathematical example, not a gameplay screenshot.
 
-```math
-c_j=\sum_{i=1}^{n}a_{ij}
-```
+### Whole-board checks
 
-and
+Rows and columns count the same values:
 
-```math
-d_j=\sum_{i=1}^{n}I(a_{ij}=0).
-```
-
-Here $I(P)$ is 1 when condition $P$ is true and 0 otherwise.
-
-In Bomb Flip these four arrays are calculated directly from the grid by `board_calculate_clues()`. In the reconstructed Voltorb Flip source, the corresponding point sums and Voltorb counts are also derived from the generated 5 × 5 board. The clue geometry is therefore the closest mathematical link between the two games.
-
-![Worked 6 × 6 Bomb Flip clue model with exposed values and calculated row and column clues](media/bomb-flip-clue-model.svg)
-
-The diagram deliberately exposes every card in one level-9-compatible board so the equations can be checked visually. Each clue is written as `sum / bombs`; the highlighted first row is the worked line derived in section 5. In the actual game these values remain hidden.
-
-## 4. Global consistency invariants
-
-Row sums and column sums count the same values:
-
-```math
-\sum_{i=1}^{n}s_i
-=
-\sum_{j=1}^{n}c_j
-=
-X_1+2X_2+3X_3.
-```
-
-Substituting the expression for $X_1$ gives
-
-```math
-\sum_i s_i=\sum_j c_j=N-B+X_2+2X_3.
-```
-
-Hazard counts obey
-
-```math
-\sum_i b_i=\sum_j d_j=B.
-```
-
-These identities are shared by both games. They are useful for validating a generator and for detecting an inconsistent transcription of a puzzle.
-
-### Worked global check: Bomb Flip level 1
-
-Level 1 has $N=25$, $B=6$, $X_2=3$ and $X_3=1$, hence
-
-```math
-X_1=25-6-3-1=15.
-```
-
-Before considering the positions of the cards, every valid generated board must satisfy
-
-```math
+~~~math
 \sum_i s_i=\sum_j c_j
-=15+2\cdot3+3\cdot1
-=24
-```
+=X_1+2X_2+3X_3
+=N-B+X_2+2X_3.
+~~~
 
-and
+The bomb totals satisfy
 
-```math
-\sum_i b_i=\sum_j d_j=6.
-```
+~~~math
+\sum_i b_i=\sum_j d_j=B.
+~~~
 
-These are inexpensive whole-board checks: they validate the clue computation independently of any particular arrangement.
+For level 1, $N=25$, $B=6$, $X_2=3$ and $X_3=1$. Hence $X_1=15$, the sum of all values is 24 and the total bomb count is 6. The host tests verify these identities for all twelve configurations.
 
-## 5. What one line implies
+## 3. What a line clue determines
 
-Consider a row or column of length $n$ with $b$ hazards and displayed sum $s$. Let $n_1,n_2,n_3$ be the counts of ×1, ×2 and ×3 cards in the line. The number of safe cards is
+Consider one row or column of length $n$, with bomb count $b$ and value sum $s$. Let $n_1,n_2,n_3$ count its safe values. There are
 
-```math
-r=n-b=n_1+n_2+n_3.
-```
+~~~math
+r=n-b=n_1+n_2+n_3
+~~~
 
-If every safe card were ×1, its sum would be $r$. Define the excess
+safe cards. If they were all ×1, their sum would be $r$. The excess over that baseline is
 
-```math
+~~~math
 e=s-r=s+b-n.
-```
+~~~
 
-A ×2 contributes one unit above the ×1 baseline, while a ×3 contributes two. Therefore
+Since a ×2 contributes one unit above the baseline and a ×3 contributes two,
 
-```math
+~~~math
 e=n_2+2n_3.
-```
+~~~
 
-The possible compositions are constrained by
+Therefore
 
-```math
-\max(0,e-r)\leq n_3\leq\left\lfloor\frac{e}{2}\right\rfloor,
-```
+~~~math
+\max(0,e-r)\leq n_3\leq\left\lfloor\frac e2\right\rfloor,
+~~~
 
-followed by
+with
 
-```math
-n_2=e-2n_3,
-\qquad
-n_1=r-n_2-n_3.
-```
+~~~math
+n_2=e-2n_3,\qquad n_1=r-n_2-n_3.
+~~~
 
-This compact derivation explains many familiar Voltorb Flip deduction rules without listing them as isolated tricks. The [Cave of Dragonflies strategy guide](https://www.dragonflycave.com/johto/voltorb-flip/) gives worked line-composition examples; the equations above generalize the same reasoning to either board size used by Bomb Flip.
+This describes every line composition compatible with the two displayed clues.
 
-### Worked 6 × 6 line
+### Example on a 6 × 6 board
 
-The highlighted first row in the clue-model diagram has length $n=6$, two bombs and displayed sum $s=7$. Then
+Suppose $n=6$, $b=2$ and $s=7$. Then
 
-```math
-r=6-2=4,
-\qquad
-e=7-4=3.
-```
+~~~math
+r=4,\qquad e=3.
+~~~
 
-The bound permits $n_3=0$ or $n_3=1$:
+Two safe multisets are possible:
 
-| $n_3$ | $n_2$ | $n_1$ | Safe multiset | Complete line |
-|---:|---:|---:|---|---|
-| 0 | 3 | 1 | $\{1,2,2,2\}$ | $\{0,0,1,2,2,2\}$ |
-| 1 | 1 | 2 | $\{1,1,2,3\}$ | $\{0,0,1,1,2,3\}$ |
+| $n_1$ | $n_2$ | $n_3$ | Complete line |
+| ---: | ---: | ---: | --- |
+| 1 | 3 | 0 | $\{0,0,1,2,2,2\}$ |
+| 2 | 1 | 1 | $\{0,0,1,1,2,3\}$ |
 
-The clues determine the two possible line compositions but do not distinguish between them. Information from intersecting columns or revealed cells is required to remove the ambiguity. This is precisely why treating rows and columns as independent probability problems is generally incorrect.
+The line clue alone cannot choose between them. Intersecting clues and revealed cells provide the missing information.
 
-## 6. The dead-line rule, generalized to 6 × 6
+## 4. Dead lines and the 6 × 6 extension
 
-A line is “dead” when none of its unrevealed cells can contain a required ×2 or ×3 card. Suppose $q_2$ ×2 cards and $q_3$ ×3 cards have already been revealed in that line. The remaining excess is
+A line is dead when none of its unrevealed cells can contain a required ×2 or ×3. If $q_2$ twos and $q_3$ threes are already revealed, the remaining excess is
 
-```math
+~~~math
 e_{\mathrm{rem}}=s+b-n-q_2-2q_3.
-```
+~~~
 
-The line is dead exactly when
+The line is dead exactly when $e_{\mathrm{rem}}=0$.
 
-```math
-e_{\mathrm{rem}}=0.
-```
+For a 5 × 5 board:
 
-For the original 5 × 5 game this becomes
-
-```math
+~~~math
 s+b-5=q_2+2q_3.
-```
+~~~
 
-That is the classic formula documented in the [GameFAQs Voltorb Flip guide](https://gamefaqs.gamespot.com/ds/960100-pokemon-soulsilver-version/faqs/59308) and in the [Bulbapedia strategy section](https://bulbapedia.bulbagarden.net/wiki/Voltorb_Flip#Dead_row/column_formula).
+For Bomb Flip's 6 × 6 levels:
 
-For Bomb Flip levels 1–8 the same formula applies unchanged. For levels 9–12, the board is 6 × 6, so the correct version is
-
-```math
+~~~math
 s+b-6=q_2+2q_3.
-```
+~~~
 
-The familiar “total five” shortcut is the special case $n=5$ and $q_2=q_3=0$: if $s+b=5$, the line initially contains only hazards and ×1 cards. On a 6 × 6 Bomb Flip board, the corresponding shortcut is $s+b=6$.
+Thus the familiar shortcut $s+b=5$ becomes $s+b=6$ on the larger board when no high card has yet been revealed. The clue system is unchanged; only the line length changes.
 
-This is a mathematical extension made necessary by Bomb Flip's larger late-game board, not a different clue system.
+## 5. Completion
 
-## 7. Completion as a subset condition
+Let $R$ be the set of revealed cells. The board is complete when
 
-Let $R$ be the set of revealed cells. Both games complete a board when
-
-```math
+~~~math
 \{(i,j):a_{ij}\in\{2,3\}\}\subseteq R.
-```
+~~~
 
-Revealing every ×1 card is unnecessary. This is why dead lines can be ignored safely: once a line's remaining excess is zero, nothing required for completion remains there.
+Revealing every ×1 is optional. In the C code, `board_all_high_cards_flipped()` implements this condition directly.
 
-In Bomb Flip this rule is implemented by `board_all_high_cards_flipped()`. In the reconstructed original, multiplier cards are counted and the round is won when the current payout reaches the board's maximum product, which occurs after every ×2 and ×3 has been flipped.
+## 6. Bomb Flip generator
 
-## 8. Generator mathematics: where the distributions diverge
+Each level has one fixed tuple $(B,X_2,X_3)$. `board_clear()` sets every active cell to 1. The placement routine then chooses distinct random cells for the bombs, ×2 cards and ×3 cards.
 
-### Bomb Flip
+If `riv_rand_uint()` is uniform on the requested range, the routine samples the categorical arrangements uniformly. The number of layouts is
 
-Each Bomb Flip level has one fixed tuple $(B,X_2,X_3)$. Positions are repeatedly sampled until all configured non-×1 cards occupy distinct cells. Assuming `riv_rand_uint()` is uniform on the requested coordinate range, this is sampling without replacement. A board is generated once, when the player starts the run; application initialization does not generate a hidden board and discard it.
-
-The number of categorical layouts for one configured level is
-
-```math
+~~~math
 M=\frac{N!}{B!\,X_1!\,X_2!\,X_3!}.
-```
+~~~
 
-Before clues or reveals are observed, a position has marginals
+Before any clue is observed, a fixed position has marginals
 
-```math
-P(a_{ij}=0)=\frac{B}{N},
+~~~math
+P(a_{ij}=0)=\frac BN,
 \qquad
-P(a_{ij}=k)=\frac{X_k}{N}
-\quad(k=1,2,3).
-```
+P(a_{ij}=k)=\frac{X_k}{N},\quad k=1,2,3.
+~~~
 
-Bomb Flip does not reject a board because it is easy, and it has no solver or probability engine. Scanner locations are sampled only after the board is complete and therefore do not alter this board distribution. Their ordinary selection uses the same random rejection method; after one hundred unsuccessful attempts, a row-major safe-cell fallback makes assignment total rather than probabilistically fallible.
+Scanner positions are selected after the board. They must be safe and distinct, so they do not alter the board distribution. After one hundred failed random attempts, a row-major fallback guarantees that assignment finishes.
 
-### Voltorb Flip
+Voltorb Flip has a more involved generator. The reconstructed source uses several board configurations per level and rejects arrangements with too many risk-free multipliers. Exact probabilities for the original game therefore depend on the hidden board type and its acceptance rule; Bomb Flip has no corresponding filter.
 
-The reconstructed original uses 80 board-configuration entries: ten entries associated with each of eight levels. Its level distribution nominally gives each of those ten entries a 10% selection interval. The ten entries represent five composition tuples listed twice; depending on the level, the paired entries can carry different limits on how many ×2/×3 cards may be exposed in zero-Voltorb rows or columns.
+## 7. Conditional probability
 
-After a board type is selected, the code randomly places Voltorbs, ×2 cards and ×3 cards, then retries when the number of risk-free multipliers reaches configured line or board limits. It attempts this rejection process up to 1,000 times. See `sBoardIdDistribution`, `sBoardConfigs`, `VoltorbFlipGameState_RetryBoardGen()` and `VoltorbFlipGameState_GenerateBoard()` in the [community decompilation](https://github.com/pret/pokeheartgold/blob/90e85d4e027f5e04800e7e015b3207094061402c/src/voltorb_flip/voltorb_flip_game.c).
+Let $H$ contain all visible clues and revealed cells. For Bomb Flip, let $N_H$ be the number of fixed-count layouts compatible with $H$, and $N_{ij,v}$ the number with $a_{ij}=v$. Under the generator above,
 
-Consequently, “all boards satisfying the visible clues are equally likely” is a reasonable model for Bomb Flip's fixed-count generator, but not for Voltorb Flip when the hidden board type and its rejection filter are unknown.
-
-## 9. Conditional probability and solvers
-
-Let $H$ represent all visible row/column clues and revealed cells. For Bomb Flip, let $N_H$ be the number of fixed-count layouts compatible with $H$, and let $N_{ij,v}$ be the number of those layouts in which $a_{ij}=v$. Under the uniform-placement assumption,
-
-```math
+~~~math
 P(a_{ij}=v\mid H)=\frac{N_{ij,v}}{N_H}.
-```
+~~~
 
-Rows and columns are not independent events: a cell assignment simultaneously affects one row and one column. Marcus Pasell's [algorithmic analysis of Voltorb Flip](https://understandable.dev/deep-dives/voltorb-flip/) develops this dependence and enumerates compatible solutions by backtracking.
+Rows and columns cannot be treated as independent because every cell belongs to both. A solver can enumerate compatible assignments by backtracking over the joint constraint system. Bomb Flip does not implement such a solver; the equation describes the deduction problem faced by the player.
 
-For the original generator, a type variable $T$ must also be considered:
+For comparison, an exact model of Voltorb Flip also needs a board-type variable because its hidden configurations and rejection rules have different weights.
 
-```math
-P(a_{ij}=v\mid H)
-=
-\sum_t
-P(a_{ij}=v\mid H,T=t)
-P(T=t\mid H).
-```
+## 8. Score, time and stopping
 
-The posterior weight of a type changes with the clues and with the number of accepted boards that type can generate. The independent [Voltorb Flip solver explanation](https://gimmytomas.github.io/voltorb-flip/algorithm.html) presents a Bayesian implementation that accounts for those board types and legality filters. It is a solver analysis, not part of Bomb Flip and not an authority for Bomb Flip behavior.
+If $q_1,q_2,q_3$ safe cards have been revealed in the current Bomb Flip level, the card score is
 
-## 10. Scoring: exponential versus additive
-
-Let $q_1,q_2,q_3$ be the numbers of revealed safe cards of each value.
-
-### Voltorb Flip payout
-
-After at least one safe card has been revealed, the original current-round payout is the product
-
-```math
-C_{\mathrm{VF}}=2^{q_2}3^{q_3}.
-```
-
-×1 cards do not change it. Before any card is revealed, the interface represents the payout as zero. The reconstructed code multiplies the current-round payout by each safe card value and caps that payout at 50,000. A board with $X_2$ twos and $X_3$ threes therefore has maximum payout
-
-```math
-C_{\mathrm{VF,max}}=\min(50000,2^{X_2}3^{X_3}).
-```
-
-### Bomb Flip score and time
-
-Bomb Flip awards a linear card score within the current level:
-
-```math
+~~~math
 C_{\mathrm{cards}}=100(q_1+2q_2+3q_3).
-```
+~~~
 
-At level $\ell$, the timer starts at
+Level $\ell$ starts with
 
-```math
+~~~math
 t_0=45+5(\ell-1)
-```
+~~~
 
-seconds. Revealing a safe value $v$ adds $3v$ seconds, capped at 150 seconds. Completing the level banks the card score and adds the truncated time bonus
+seconds. A safe value $v$ adds $3v$ seconds, capped at 150. On completion, the game adds
 
-```math
-C_{\mathrm{time}}=\left\lfloor 10t\right\rfloor,
-```
+~~~math
+C_{\mathrm{time}}=\lfloor 10t\rfloor,
+~~~
 
-where $t$ is the remaining time sampled after the remaining-card animation. The countdown is frozen from the reveal of the last required card through that animation and the cleared-level panel.
+where $t$ is the remaining time.
 
-Scanner previews and the fold confirmation are deliberately modal. If $t$ is the time before either interaction and no card is revealed while it is open, then
+Fold terminates the run and banks
 
-```math
-t'=t.
-```
-
-The same frames suspend sequenced-music polling and the periodic outcard refresh from the main loop. Scanner use and fold cancellation leave the outcard unchanged; confirming a fold writes the terminal result through `game_finish()`. This makes consultation time free: using an information reward or evaluating the stopping choice does not consume the countdown resource.
-
-The scoring difference is structural. Voltorb Flip makes successive ×2/×3 reveals exponentially more valuable; Bomb Flip gives each card an additive value and couples reward to speed.
-
-## 11. Stopping and failure are not equivalent
-
-Voltorb Flip's Quit action ends the current round and awards the full current payout. The next level is then determined from round outcome, previous level and number of cards flipped. Revealing a Voltorb sets the current payout to zero. These behaviors are visible in the [reconstructed application flow](https://github.com/pret/pokeheartgold/blob/90e85d4e027f5e04800e7e015b3207094061402c/src/voltorb_flip/voltorb_flip.c) and summarized in the [rules overview](https://bulbapedia.bulbagarden.net/wiki/Voltorb_Flip).
-
-Bomb Flip's Fold is a different optimal-stopping problem. It terminates the entire run and banks
-
-```math
+~~~math
 C_{\mathrm{fold}}=\left\lfloor\frac{C_{\mathrm{cards}}}{2}\right\rfloor
-```
+~~~
 
-from the current level, in addition to coins banked from earlier levels.
+from the current level, in addition to earlier completed levels.
 
-A bomb also ends the Bomb Flip run. The current implementation does not add the current level's provisional `levelCoins` to `totalCoins`, but it does not erase coins already banked from earlier completed levels. Timeout is more severe: it explicitly resets both totals to zero.
+A bomb ends the run without banking the current level, but preserves earlier completed levels. Timeout is more severe and resets the entire run score to zero.
 
-Therefore Bomb Flip's Fold should not be described as merely renaming Voltorb Flip's Quit. The retained fraction, scope of termination and surrounding score model are all different.
+Scanner previews and Fold confirmation pause the countdown. This was a deliberate rule: using an information reward or considering the stopping decision does not itself consume time.
 
-### Fold as a finite-state decision
+Voltorb Flip uses a multiplicative payout, $2^{q_2}3^{q_3}$, and has no countdown. Bomb Flip therefore changes the risk model from multiplication alone to an additive score coupled to time and an explicit stopping choice.
 
-The relationship between deduction and risk can be written schematically as a finite-state decision problem. Let the reduced state be
+### Bellman interpretation
 
-```math
-z=(\ell,H,t,B,S,u,r),
-```
+The choice between revealing a card, using the scanner and folding can be written as a small Bellman equation. Let
 
-where $\ell$ is the level, $H$ is the visible information, $t$ is the remaining time, $B$ is the previously banked score, $S$ is the provisional level score, $u$ is the number of scanner uses and $r$ collects scanner-unlock and phase information. A production solver could refine $r$ into explicit state variables. Folding has the deterministic value
+~~~math
+z=(\ell,H,t,B,S,u)
+~~~
 
-```math
+describe the current level, the visible information, the remaining time, the score already banked, the score of the current level and the remaining scanner uses. Folding has the certain value
+
+~~~math
 F(z)=B+\left\lfloor\frac{S}{2}\right\rfloor.
-```
+~~~
 
-For an unrevealed cell $x$, let $p_v(x\mid H)$ be the probability that it contains $v$. If $T_v(z,x)$ denotes the exact game transition after revealing value $v$—including score, capped time reward, level completion and the timer state—then the reveal action has value
+For a hidden cell $x$, the expected value of revealing it is
 
-```math
+~~~math
 Q_{\mathrm{reveal}}(z,x)
-=
-p_0(x\mid H)B
-+
-\sum_{v=1}^{3}p_v(x\mid H)V\!\left(T_v(z,x)\right).
-```
+=P(a_x=0\mid H)B
++\sum_{v=1}^{3}P(a_x=v\mid H)V(T_v(z,x)),
+~~~
 
-The bomb term returns only the previously banked total. Timeout is a separate terminal state with value zero. A scanner action consumes one use and changes the information state without persistently revealing the card. Because the preview is modal, its transition has $t'=t$; its expected value is obtained by conditioning the next decision on the previewed value.
+where $T_v$ is the state reached after revealing a safe value $v$. If $Q_{\mathrm{scan}}(z,x)$ also includes the value of the information shown by the scanner, the decision has the form
 
-Conceptually, an optimal policy satisfies
-
-```math
-V(z)=\max\!\left\{
+~~~math
+V(z)=\max\left\{
 F(z),
 \max_x Q_{\mathrm{reveal}}(z,x),
 \max_x Q_{\mathrm{scan}}(z,x)
 \right\}.
-```
+~~~
 
-Bomb Flip does not calculate this function in code. The formulation documents the mathematical consequence of its design: clues determine posterior risk, while the additive score, asymmetric bomb/timeout losses, timer and limited information actions determine whether that risk is worth taking.
+The cartridge does not calculate this equation. It is only a compact description of the decision created by clues, time, scanner uses and Fold.
 
-### Design parameters and level transition
+## 9. Level table
 
-For a configured level, the sum of all safe values is
+![Bomb Flip level composition and bomb density](media/bomb-flip-level-progression.svg)
 
-```math
-S_{mathrm{safe}}=N-B+X_2+2X_3.
-```
+| Level | Grid | ×1 | ×2 | ×3 | Bombs | Bomb density |
+| ---: | :---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 5 × 5 | 15 | 3 | 1 | 6 | 24.0% |
+| 2 | 5 × 5 | 12 | 4 | 2 | 7 | 28.0% |
+| 3 | 5 × 5 | 9 | 5 | 3 | 8 | 32.0% |
+| 4 | 5 × 5 | 8 | 6 | 3 | 8 | 32.0% |
+| 5 | 5 × 5 | 4 | 7 | 4 | 10 | 40.0% |
+| 6 | 5 × 5 | 3 | 8 | 4 | 10 | 40.0% |
+| 7 | 5 × 5 | 2 | 8 | 5 | 10 | 40.0% |
+| 8 | 5 × 5 | 0 | 10 | 5 | 10 | 40.0% |
+| 9 | 6 × 6 | 13 | 7 | 3 | 13 | 36.1% |
+| 10 | 6 × 6 | 11 | 8 | 3 | 14 | 38.9% |
+| 11 | 6 × 6 | 9 | 9 | 3 | 15 | 41.7% |
+| 12 | 6 × 6 | 7 | 10 | 3 | 16 | 44.4% |
 
-The smallest card score compatible with completion occurs when the player reveals no optional ×1 card:
+Level 1 exactly matches one original Voltorb Flip level-1 composition. Levels 2–8 use different tuples, and the four 6 × 6 configurations have no original analogue.
 
-```math
-C_{mathrm{required}}=100(2X_2+3X_3).
-```
+The change from level 8 to 9 is a structural reset rather than a monotone increase in every statistic: the board grows, ×1 cards return and bomb density temporarily falls before rising again.
 
-Revealing every safe card instead gives
+## 10. Constraint formulation
 
-```math
-C_{mathrm{safe,max}}=100S_{mathrm{safe}}.
-```
+For a solver-oriented view, introduce binary variables
 
-The interval between these values is exactly $100X_1$. The level tuple therefore controls not only hazard density, but also how much optional ×1 exploration can add before the time bonus.
-
-The transition from level 8 to level 9 is intentionally not monotone in every statistic. The board grows from 25 to 36 cells and bombs increase from 10 to 13, while bomb density temporarily falls from 40% to about 36.1%. Required high cards decrease from 15 to 10 and ×1 cards reappear, from 0 to 13. Level 9 introduces the 6 × 6 constraint geometry as a structural reset; levels 10–12 then increase bomb density and ×2 count within that larger geometry.
-
-## 12. Level composition
-
-Bomb Flip's implemented configurations are:
-
-![Stacked bars showing the exact card composition and bomb density of all twelve Bomb Flip levels](media/bomb-flip-level-progression.svg)
-
-Bar length encodes the number of cells, so the level-9 expansion from 25 to 36 cells is visible separately from the color proportions. It is a structural reset: bomb density briefly falls before climbing to its maximum at level 12.
-
-| Level | Grid | Cells | ×2 | ×3 | Bombs | ×1 | Bomb density | Relation to same Voltorb Flip level |
-|---:|:---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | 5 × 5 | 25 | 3 | 1 | 6 | 15 | 24.0% | Exact match to one original composition |
-| 2 | 5 × 5 | 25 | 4 | 2 | 7 | 12 | 28.0% | Custom tuple |
-| 3 | 5 × 5 | 25 | 5 | 3 | 8 | 9 | 32.0% | Custom tuple |
-| 4 | 5 × 5 | 25 | 6 | 3 | 8 | 8 | 32.0% | Custom tuple |
-| 5 | 5 × 5 | 25 | 7 | 4 | 10 | 4 | 40.0% | Custom tuple |
-| 6 | 5 × 5 | 25 | 8 | 4 | 10 | 3 | 40.0% | Custom tuple |
-| 7 | 5 × 5 | 25 | 8 | 5 | 10 | 2 | 40.0% | Custom tuple |
-| 8 | 5 × 5 | 25 | 10 | 5 | 10 | 0 | 40.0% | Custom tuple |
-| 9 | 6 × 6 | 36 | 7 | 3 | 13 | 13 | 36.1% | No original 6 × 6 analogue |
-| 10 | 6 × 6 | 36 | 8 | 3 | 14 | 11 | 38.9% | No original 6 × 6 analogue |
-| 11 | 6 × 6 | 36 | 9 | 3 | 15 | 9 | 41.7% | No original 6 × 6 analogue |
-| 12 | 6 × 6 | 36 | 10 | 3 | 16 | 7 | 44.4% | No original 6 × 6 analogue |
-
-For levels 2–8, “custom tuple” means that the Bomb Flip tuple is not one of the five compositions listed for the same-numbered Voltorb Flip level. Voltorb Flip's complete composition and payout table is available in the [Bulbapedia mechanics section](https://bulbapedia.bulbagarden.net/wiki/Voltorb_Flip#Gameplay) and the reconstructed `sBoardConfigs` table.
-
-The level-1 match is important attribution evidence. The later divergence is equally important: Bomb Flip does not copy the original level table as a whole.
-
-## 13. Functional comparison
-
-| Feature | Voltorb Flip in HGSS | Bomb Flip | Mathematical or gameplay consequence |
-|---|---|---|---|
-| Board | Always 5 × 5 | 5 × 5, then 6 × 6 | Dead-line baseline changes from 5 to 6 |
-| Levels | 8 | 12 | Bomb Flip has a longer single-run curve |
-| Clues | line sum + Voltorb count | line sum + bomb count | Same constraint system |
-| Goal | reveal every ×2 and ×3 | reveal every ×2 and ×3 | Same subset completion rule |
-| Reward | product of revealed values | additive card score + time bonus | Exponential versus linear utility |
-| Time | no countdown | countdown; safe cards add time | Speed is a state variable only in Bomb Flip |
-| Hazard | loses current-round payout | ends run; current-level score remains unbanked | Different scope of loss |
-| Voluntary stop | Quit keeps full current payout | Fold keeps half current-level score and ends run | Different stopping value |
-| Deduction aid | memo marks for 0/1/2/3 | temporary scanner previews | Annotation versus paid information |
-| Scanner allocation | none | one safe scanner tile on levels 1–8; two independent tiles on levels 9–12 | Revealing either grants uses equal to its card value; previews do not consume time |
-| Board types | ten configuration entries per level, with five compositions | one composition per level | Original probability model is a type mixture |
-| Ease filter | rejects boards with too many free multipliers | none | Bomb Flip samples the full fixed-count layout space |
-| Progression | depends on win/loss/quit history and cards flipped; leaving resets to level 1 | sequential level 1 through 12 in one run | Original can advance or fall; Bomb Flip does not demote |
-| Timeout | none | timeout zeros the run total | New catastrophic risk in Bomb Flip |
-
-## 14. Constraint-system view
-
-For analysis, introduce binary variables
-
-```math
+~~~math
 x_{ij}^{(v)}\in\{0,1\},
-\qquad
-v\in\{0,1,2,3\},
-```
+\qquad v\in\{0,1,2,3\},
+~~~
 
-where $x_{ij}^{(v)}=1$ exactly when cell $(i,j)$ contains $v$. Each cell obeys
+where $x_{ij}^{(v)}=1$ exactly when cell $(i,j)$ has value $v$. Each cell satisfies
 
-```math
+~~~math
 \sum_{v=0}^{3}x_{ij}^{(v)}=1.
-```
+~~~
 
-For row $i$,
+The row clues become
 
-```math
-\sum_j\sum_{v=0}^{3}v\,x_{ij}^{(v)}=s_i
-```
-
-and
-
-```math
+~~~math
+\sum_j\sum_{v=0}^{3}v\,x_{ij}^{(v)}=s_i,
+\qquad
 \sum_jx_{ij}^{(0)}=b_i.
-```
+~~~
 
-Columns have analogous equations, and the configured card counts add global constraints.
+Columns have the analogous equations, and the level tuple supplies global card-count constraints. This formulation explains why deductions must combine row, column and whole-board information.
 
-This formulation explains why deductions at row/column intersections and compatible-board enumeration work in either game. Bomb Flip's shipped C code does not implement this solver; it stores the integer matrix directly and computes clues with loops.
+The shipped cartridge does not solve this system. It stores the integer matrix and computes its clues directly.
 
-## 15. Design conclusions
+## 11. Design and authorship boundary
 
-The comparison supports four precise claims:
+The clue equations, card alphabet, completion condition and one level-1 composition come from Voltorb Flip and are credited as such.
 
-1. Bomb Flip is genuinely inspired by Voltorb Flip, not merely adjacent to it. The clue system, card values, completion rule and first-level composition are concrete points of lineage.
-2. Bomb Flip changes the reward model from a product to a sum and introduces time, turning a pure reveal-risk puzzle into a reveal-risk-speed problem.
-3. Bomb Flip's generator is mathematically simpler: one fixed composition per level with no ease-rejection filter. Voltorb Flip's hidden board type and rejection rules matter when calculating exact probabilities.
-4. The 6 × 6 boards are a real extension. They preserve the same equations but change every line-length constant, most visibly in the dead-line rule.
+Paolo De Marinis designed Bomb Flip's timer, additive score, scanner rewards, Fold rule, twelve-level progression, later level tuples and 6 × 6 extension. He wrote most of the original gameplay code and integrated, tested and refined the complete cartridge; Cursor was used mainly for animation work and as implementation support.
 
-These are the Bomb Flip-specific mathematical choices that should be presented as Paolo's adaptations. The shared Voltorb Flip foundation should remain explicitly credited.
+## 12. Sources
 
-## 16. Relevant Bomb Flip code
-
-- `grid` in `GameState` — board matrix.
-- `LEVEL_CONFIGS` in `board.c` — the twelve fixed compositions.
-- `board_grid_size()` — 5 × 5 to 6 × 6 transition.
-- `board_clear()` and the internal placement routine — fixed-count generator.
-- `board_calculate_clues()` — line sums and bomb counts.
-- `board_all_high_cards_flipped()` — shared ×2/×3 completion condition.
-- `game_reveal_selected()` — additive coins, time gains and scanner activation.
-- `board_assign_scanner_tiles()` and the modal scanner routine — information mechanic.
-- fold input and `game_finish()` in `game.c` — stopping and loss outcomes.
-
-## 17. Sources and how they were used
-
-- [Original Bomb Flip cartridge on RIVES](https://app.rives.io/cartridges/5932d82f5827) — published cartridge and provenance record.
-- [Bomb Flip board implementation](../src/board.c) and [game rules](../src/game.c) — authoritative sources for Bomb Flip's level data, generator, clues, scoring, timer, scanner, fold and endings.
-- [pret/pokeheartgold: Voltorb Flip game-state reconstruction](https://github.com/pret/pokeheartgold/blob/90e85d4e027f5e04800e7e015b3207094061402c/src/voltorb_flip/voltorb_flip_game.c) — board configurations, random selection, rejection rules, clues, payout multiplication, completion counters and level calculation. This is a community decompilation, not official documentation.
-- [pret/pokeheartgold: Voltorb Flip application reconstruction](https://github.com/pret/pokeheartgold/blob/90e85d4e027f5e04800e7e015b3207094061402c/src/voltorb_flip/voltorb_flip.c) — Quit flow, payout transfer, memo interface and round outcomes.
-- [Bulbapedia: Voltorb Flip](https://bulbapedia.bulbagarden.net/wiki/Voltorb_Flip) — accessible overview of gameplay, progression, composition table, memo and dead-line formulas.
-- [Marcus Pasell: “How to solve Voltorb Flip using an algorithm”](https://understandable.dev/deep-dives/voltorb-flip/) — dependence of row and column events, compatible-solution enumeration and per-cell probabilities.
-- [The Cave of Dragonflies: Voltorb Flip Guide](https://www.dragonflycave.com/johto/voltorb-flip/) — worked deduction rules and reduced-line examples.
-- [GameFAQs: Voltorb Flip Guide](https://gamefaqs.gamespot.com/ds/960100-pokemon-soulsilver-version/faqs/59308) — the classic 5-cell dead-line equation and strategy explanation.
-- [Gimmy Tomas: How the Solver Works](https://gimmytomas.github.io/voltorb-flip/algorithm.html) — external Bayesian analysis of the original board-type mixture and rejection constraints; cited as solver methodology, not as Bomb Flip implementation evidence.
+- [Original Bomb Flip cartridge on RIVES](https://app.rives.io/cartridges/5932d82f5827) — publication and provenance.
+- [Bomb Flip `board.c`](../src/board.c) and [`game.c`](../src/game.c) — implemented Bomb Flip rules.
+- [pret/pokeheartgold: game-state reconstruction](https://github.com/pret/pokeheartgold/blob/90e85d4e027f5e04800e7e015b3207094061402c/src/voltorb_flip/voltorb_flip_game.c) — original board configurations, generator, clues and progression data.
+- [pret/pokeheartgold: application reconstruction](https://github.com/pret/pokeheartgold/blob/90e85d4e027f5e04800e7e015b3207094061402c/src/voltorb_flip/voltorb_flip.c) — Quit, memo and round flow.
+- [Bulbapedia: Voltorb Flip](https://bulbapedia.bulbagarden.net/wiki/Voltorb_Flip) — rules, compositions and dead-line formula.
+- [Marcus Pasell: algorithmic solution](https://understandable.dev/deep-dives/voltorb-flip/) — compatible-board enumeration and row/column dependence.
+- [The Cave of Dragonflies: Voltorb Flip guide](https://www.dragonflycave.com/johto/voltorb-flip/) — worked clue deductions.
+- [GameFAQs: Voltorb Flip guide](https://gamefaqs.gamespot.com/ds/960100-pokemon-soulsilver-version/faqs/59308) — classic five-cell dead-line rule.
+- [Gimmy Tomas: solver explanation](https://gimmytomas.github.io/voltorb-flip/algorithm.html) — Bayesian treatment of original board types; cited as solver methodology, not as Bomb Flip implementation evidence.

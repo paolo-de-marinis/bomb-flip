@@ -7,9 +7,6 @@ typedef struct {
     int x2Cards;
     int x3Cards;
     int bombs;
-    /* Historical table metadata; Bomb Flip's additive score does not read it. */
-    int legacyMinimumReward;
-    int legacyMaximumReward;
 } LevelConfig;
 
 const LevelConfig *board_level_config(int level);
