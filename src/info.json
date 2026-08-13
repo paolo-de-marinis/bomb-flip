@@ -1,18 +1,20 @@
 {
-    "name": "Bomb Flip",
-    "summary": "A thrilling strategic puzzle game where every flip could be your last!",
-    "description": "Bomb Flip is an adrenaline-pumping puzzle game that puts your nerves and strategy to the ultimate test. Dive into a grid of hidden cards where fortunes and explosives lie in wait. Your mission: flip cards, amass coins, and escape before the bombs explode and end your run!\n\nPay attention to:\n- Time: The bombs are ticking! Flip cards quickly to collect coins, but don't wait too long or it's game over.\n- Grid sums: The numbers around the grid provide crucial information. For each row and column, you'll see two numbers:\n  • The first number is the total points (coin values) in that row or column.\n  • The second number is the count of bombs in that row or column.\n- High value cards: To complete a level, you must flip all the high value cards (2x and 3x) without hitting a bomb. This is crucial for advancing!\n- Scanner uses: These precious tools let you peek at cards without flipping. Use them wisely to avoid bombs!\n- Folding option: You can end the level early to secure half of current level coins. Is it better to fold or risk it for more?\n\nControls:\n- E or START: Begin the game\n- Arrow keys: Navigate the grid\n- Z or A1: Flip a card\n- X or A2: Use scanner (when available)\n- W or SELECT: Fold (end the level early)\n\nAs you advance, face new challenges:\n- Expanding grid sizes offer more coins but hide more dangers.\n- Increasing bomb counts with tighter time limits raise the stakes with each level.\n- Strategic use of scanner abilities becomes crucial for survival.\n\nYour goal? Achieve the highest score possible by collecting coins across multiple levels before the final explosion. But remember, greed can be deadly - know when to fold and run with your riches!\n\nDo you have the courage to chase high scores, or will you play it safe? Every decision counts in Bomb Flip - a game where fortune favors the bold, but only the quick survive. Are you ready to put your skills to the test?",
-    "tags": [
-        "puzzle",
-        "strategy",
-        "card",
-        "2d",
-        "bomb",
-        "time-pressure",
-        "flip"
-    ],
-  "authors": [{
-"name": "Paolo De Marinis",
-"link": "https://x.com/PaoloCTSI"
-}]
+  "name": "Bomb Flip",
+  "summary": "A timed, clue-based strategy puzzle where every flip changes the risk.",
+  "description": "Bomb Flip is a timed strategy-puzzle RIVES cartridge. Each card contains a bomb or a ×1, ×2 or ×3 coin. For every row and column, the first clue is the sum of its coin values and the second is its number of bombs.\n\nObjective:\n- Reveal every ×2 and ×3 card to complete the current level.\n- Avoid bombs and keep the countdown above zero.\n- Safe cards award 100 times their value in current-level coins and add three times their value in seconds, up to the 150-second cap.\n\nRisk and information:\n- Scanner cards grant limited previews without permanently revealing the selected card.\n- Folding ends the entire run and banks half of the current level's coins, in addition to coins already banked.\n- A bomb ends the run without banking the current level's provisional coins. A timeout resets the run total.\n\nControls:\n- Z or A1, or E or START: begin the run\n- Arrow keys or D-pad: move the selection\n- Z or A1: reveal a card and confirm Fold\n- X or A2: use a scanner when available\n- W or SELECT, or F or R2: open or close the Fold dialog\n\nProgression consists of twelve sequential levels. Levels 1–8 use 5 × 5 boards; levels 9–12 use 6 × 6 boards. Later configurations contain more bombs and denser hazards, while their larger starting time offsets the longer boards. The central decision is whether to continue pursuing score or fold before a bomb or timeout ends the run.",
+  "tags": [
+    "puzzle",
+    "strategy",
+    "card",
+    "2d",
+    "bomb",
+    "time-pressure",
+    "flip"
+  ],
+  "authors": [
+    {
+      "name": "Paolo De Marinis",
+      "link": "https://x.com/PaoloCTSI"
+    }
+  ]
 }

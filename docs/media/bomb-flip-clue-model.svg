@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Bomb Flip worked clue model</title>
+  <desc id="desc">A worked six by six level-nine-compatible board. Every card is exposed to show how row and column sum and bomb clues are calculated. The first row is highlighted and has sum seven, two bombs, and excess three.</desc>
+  <style>
+    .label { fill: #8fa7bd; font: 600 15px "DejaVu Sans", sans-serif; letter-spacing: 1.4px; }
+    .small { fill: #8fa7bd; font: 14px "DejaVu Sans", sans-serif; }
+    .body { fill: #eaf4ff; font: 18px "DejaVu Sans", sans-serif; }
+    .mono { fill: #eaf4ff; font: 600 20px "DejaVu Sans Mono", monospace; }
+    .cell { fill: #131c2d; stroke: #344761; stroke-width: 2; }
+    .clue { fill: #18253a; stroke: #46637f; stroke-width: 2; }
+    .one { fill: #a9e8ff; }
+    .two { fill: #ffe45b; }
+    .three { fill: #ff9a4d; }
+    .bomb { fill: #ff5b72; }
+  </style>
+  <rect width="1200" height="760" fill="#090f1c"/>
+  <rect x="24" y="24" width="1152" height="712" rx="24" fill="#0d1626" stroke="#263a53" stroke-width="2"/>
+
+  <text x="64" y="74" fill="#ff9a4d" font-family="DejaVu Sans Mono, monospace" font-size="16" font-weight="700" letter-spacing="2">BOMB FLIP · CLUE MODEL</text>
+  <text x="64" y="110" fill="#f3f8ff" font-family="DejaVu Sans, sans-serif" font-size="25" font-weight="700">Worked 6 × 6 board compatible with level 9</text>
+  <text x="64" y="137" class="small">Cards are exposed here only to derive the clues; gameplay keeps them hidden.</text>
+
+  <text x="93" y="172" class="label">CARD MATRIX A</text>
+  <text x="551" y="172" class="label">ROW s / b</text>
+  <rect x="80" y="183" width="590" height="70" rx="10" fill="none" stroke="#ff9a4d" stroke-width="4"/>
+
+  <!-- Row 1 -->
+  <rect x="90" y="188" width="70" height="60" class="cell"/><text x="125" y="219" text-anchor="middle" dominant-baseline="middle" class="mono bomb">0</text>
+  <rect x="160" y="188" width="70" height="60" class="cell"/><text x="195" y="219" text-anchor="middle" dominant-baseline="middle" class="mono bomb">0</text>
+  <rect x="230" y="188" width="70" height="60" class="cell"/><text x="265" y="219" text-anchor="middle" dominant-baseline="middle" class="mono one">1</text>
+  <rect x="300" y="188" width="70" height="60" class="cell"/><text x="335" y="219" text-anchor="middle" dominant-baseline="middle" class="mono two">2</text>
+  <rect x="370" y="188" width="70" height="60" class="cell"/><text x="405" y="219" text-anchor="middle" dominant-baseline="middle" class="mono two">2</text>
+  <rect x="440" y="188" width="70" height="60" class="cell"/><text x="475" y="219" text-anchor="middle" dominant-baseline="middle" class="mono two">2</text>
+  <rect x="548" y="188" width="112" height="60" rx="8" class="clue"/><text x="604" y="219" text-anchor="middle" dominant-baseline="middle" class="mono">7 / 2</text>
+
+  <!-- Row 2 -->
+  <rect x="90" y="258" width="70" height="60" class="cell"/><text x="125" y="289" text-anchor="middle" dominant-baseline="middle" class="mono three">3</text>
+  <rect x="160" y="258" width="70" height="60" class="cell"/><text x="195" y="289" text-anchor="middle" dominant-baseline="middle" class="mono bomb">0</text>
+  <rect x="230" y="258" width="70" height="60" class="cell"/><text x="265" y="289" text-anchor="middle" dominant-baseline="middle" class="mono one">1</text>
+  <rect x="300" y="258" width="70" height="60" class="cell"/><text x="335" y="289" text-anchor="middle" dominant-baseline="middle" class="mono bomb">0</text>
+  <rect x="370" y="258" width="70" height="60" class="cell"/><text x="405" y="289" text-anchor="middle" dominant-baseline="middle" class="mono one">1</text>
+  <rect x="440" y="258" width="70" height="60" class="cell"/><text x="475" y="289" text-anchor="middle" dominant-baseline="middle" class="mono two">2</text>
+  <rect x="548" y="258" width="112" height="60" rx="8" class="clue"/><text x="604" y="289" text-anchor="middle" dominant-baseline="middle" class="mono">7 / 2</text>
+
+  <!-- Row 3 -->
+  <rect x="90" y="328" width="70" height="60" class="cell"/><text x="125" y="359" text-anchor="middle" dominant-baseline="middle" class="mono one">1</text>
+  <rect x="160" y="328" width="70" height="60" class="cell"/><text x="195" y="359" text-anchor="middle" dominant-baseline="middle" class="mono one">1</text>
+  <rect x="230" y="328" width="70" height="60" class="cell"/><text x="265" y="359" text-anchor="middle" dominant-baseline="middle" class="mono bomb">0</text>
+  <rect x="300" y="328" width="70" height="60" class="cell"/><text x="335" y="359" text-anchor="middle" dominant-baseline="middle" class="mono bomb">0</text>
+  <rect x="370" y="328" width="70" height="60" class="cell"/><text x="405" y="359" text-anchor="middle" dominant-baseline="middle" class="mono three">3</text>
+  <rect x="440" y="328" width="70" height="60" class="cell"/><text x="475" y="359" text-anchor="middle" dominant-baseline="middle" class="mono one">1</text>
+  <rect x="548" y="328" width="112" height="60" rx="8" class="clue"/><text x="604" y="359" text-anchor="middle" dominant-baseline="middle" class="mono">6 / 2</text>
+
+  <!-- Row 4 -->
+  <rect x="90" y="398" width="70" height="60" class="cell"/><text x="125" y="429" text-anchor="middle" dominant-baseline="middle" class="mono bomb">0</text>
+  <rect x="160" y="398" width="70" height="60" class="cell"/><text x="195" y="429" text-anchor="middle" dominant-baseline="middle" class="mono two">2</text>
+  <rect x="230" y="398" width="70" height="60" class="cell"/><text x="265" y="429" text-anchor="middle" dominant-baseline="middle" class="mono one">1</text>
+  <rect x="300" y="398" width="70" height="60" class="cell"/><text x="335" y="429" text-anchor="middle" dominant-baseline="middle" class="mono one">1</text>
+  <rect x="370" y="398" width="70" height="60" class="cell"/><text x="405" y="429" text-anchor="middle" dominant-baseline="middle" class="mono bomb">0</text>
+  <rect x="440" y="398" width="70" height="60" class="cell"/><text x="475" y="429" text-anchor="middle" dominant-baseline="middle" class="mono one">1</text>
+  <rect x="548" y="398" width="112" height="60" rx="8" class="clue"/><text x="604" y="429" text-anchor="middle" dominant-baseline="middle" class="mono">5 / 2</text>
+
+  <!-- Row 5 -->
+  <rect x="90" y="468" width="70" height="60" class="cell"/><text x="125" y="499" text-anchor="middle" dominant-baseline="middle" class="mono one">1</text>
+  <rect x="160" y="468" width="70" height="60" class="cell"/><text x="195" y="499" text-anchor="middle" dominant-baseline="middle" class="mono bomb">0</text>
+  <rect x="230" y="468" width="70" height="60" class="cell"/><text x="265" y="499" text-anchor="middle" dominant-baseline="middle" class="mono two">2</text>
+  <rect x="300" y="468" width="70" height="60" class="cell"/><text x="335" y="499" text-anchor="middle" dominant-baseline="middle" class="mono one">1</text>
+  <rect x="370" y="468" width="70" height="60" class="cell"/><text x="405" y="499" text-anchor="middle" dominant-baseline="middle" class="mono bomb">0</text>
+  <rect x="440" y="468" width="70" height="60" class="cell"/><text x="475" y="499" text-anchor="middle" dominant-baseline="middle" class="mono three">3</text>
+  <rect x="548" y="468" width="112" height="60" rx="8" class="clue"/><text x="604" y="499" text-anchor="middle" dominant-baseline="middle" class="mono">7 / 2</text>
+
+  <!-- Row 6 -->
+  <rect x="90" y="538" width="70" height="60" class="cell"/><text x="125" y="569" text-anchor="middle" dominant-baseline="middle" class="mono bomb">0</text>
+  <rect x="160" y="538" width="70" height="60" class="cell"/><text x="195" y="569" text-anchor="middle" dominant-baseline="middle" class="mono one">1</text>
+  <rect x="230" y="538" width="70" height="60" class="cell"/><text x="265" y="569" text-anchor="middle" dominant-baseline="middle" class="mono bomb">0</text>
+  <rect x="300" y="538" width="70" height="60" class="cell"/><text x="335" y="569" text-anchor="middle" dominant-baseline="middle" class="mono two">2</text>
+  <rect x="370" y="538" width="70" height="60" class="cell"/><text x="405" y="569" text-anchor="middle" dominant-baseline="middle" class="mono one">1</text>
+  <rect x="440" y="538" width="70" height="60" class="cell"/><text x="475" y="569" text-anchor="middle" dominant-baseline="middle" class="mono bomb">0</text>
+  <rect x="548" y="538" width="112" height="60" rx="8" class="clue"/><text x="604" y="569" text-anchor="middle" dominant-baseline="middle" class="mono">4 / 3</text>
+
+  <text x="90" y="628" class="label">COLUMN CLUES · SUM / BOMBS</text>
+  <g class="mono" text-anchor="middle">
+    <rect x="90" y="640" width="70" height="58" class="clue"/><text x="125" y="670" dominant-baseline="middle">5 / 3</text>
+    <rect x="160" y="640" width="70" height="58" class="clue"/><text x="195" y="670" dominant-baseline="middle">4 / 3</text>
+    <rect x="230" y="640" width="70" height="58" class="clue"/><text x="265" y="670" dominant-baseline="middle">5 / 2</text>
+    <rect x="300" y="640" width="70" height="58" class="clue"/><text x="335" y="670" dominant-baseline="middle">6 / 2</text>
+    <rect x="370" y="640" width="70" height="58" class="clue"/><text x="405" y="670" dominant-baseline="middle">7 / 2</text>
+    <rect x="440" y="640" width="70" height="58" class="clue"/><text x="475" y="670" dominant-baseline="middle">9 / 1</text>
+  </g>
+  <text x="90" y="724" class="small"><tspan class="bomb">0 bomb</tspan><tspan dx="18" class="one">1 ×1</tspan><tspan dx="18" class="two">2 ×2</tspan><tspan dx="18" class="three">3 ×3</tspan></text>
+
+  <rect x="710" y="162" width="420" height="522" rx="18" fill="#111d30" stroke="#2f4965" stroke-width="2"/>
+  <text x="746" y="207" class="label">HIGHLIGHTED LINE</text>
+  <text x="746" y="246" class="mono">n = 6,  s = 7,  b = 2</text>
+  <text x="746" y="286" class="body">safe cards</text><text x="912" y="286" class="mono">r = n − b = 4</text>
+  <text x="746" y="326" class="body">excess</text><text x="912" y="326" class="mono">e = s + b − n = 3</text>
+  <text x="746" y="366" class="body">constraint</text><text x="912" y="366" class="mono">e = n₂ + 2n₃</text>
+  <line x1="746" y1="392" x2="1094" y2="392" stroke="#2f4965" stroke-width="2"/>
+  <text x="746" y="429" class="label">TWO COMPATIBLE SAFE MULTISETS</text>
+  <text x="746" y="469" class="mono two">{1, 2, 2, 2}</text>
+  <text x="746" y="505" class="mono three">{1, 1, 2, 3}</text>
+  <text x="746" y="537" class="small">Intersecting column clues resolve the ambiguity.</text>
+  <line x1="746" y1="563" x2="1094" y2="563" stroke="#2f4965" stroke-width="2"/>
+  <text x="746" y="600" class="label">GLOBAL CHECK</text>
+  <text x="746" y="635" class="mono">B=13 · X₁=13 · X₂=7 · X₃=3</text>
+  <text x="746" y="666" class="small">Σ sums = 36 · Σ bomb clues = 13</text>
+</svg>

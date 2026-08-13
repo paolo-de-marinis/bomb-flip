@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="740" viewBox="0 0 1200 740" role="img" aria-labelledby="title desc">
+  <title id="title">Bomb Flip level composition progression</title>
+  <desc id="desc">Stacked bars show the exact bomb, times-one, times-two and times-three card counts for all twelve Bomb Flip levels. Levels one through eight have twenty-five cells. Level nine expands to thirty-six cells and temporarily lowers bomb density before it increases through level twelve.</desc>
+  <style>
+    .label { fill: #8fa7bd; font: 600 14px "DejaVu Sans", sans-serif; letter-spacing: 1px; }
+    .small { fill: #9eb1c5; font: 14px "DejaVu Sans", sans-serif; }
+    .level { fill: #eaf4ff; font: 700 16px "DejaVu Sans Mono", monospace; }
+    .density { fill: #eaf4ff; font: 600 15px "DejaVu Sans Mono", monospace; }
+    .count { fill: #07101c; font: 700 13px "DejaVu Sans Mono", monospace; }
+    .bomb { fill: #ff5b72; }
+    .one { fill: #8fcce8; }
+    .two { fill: #ffe45b; }
+    .three { fill: #ff9a4d; }
+  </style>
+  <rect width="1200" height="740" fill="#090f1c"/>
+  <rect x="24" y="24" width="1152" height="692" rx="24" fill="#0d1626" stroke="#263a53" stroke-width="2"/>
+
+  <text x="64" y="74" fill="#ff9a4d" font-family="DejaVu Sans Mono, monospace" font-size="16" font-weight="700" letter-spacing="2">BOMB FLIP · LEVEL COMPOSITION</text>
+  <text x="64" y="110" fill="#f3f8ff" font-family="DejaVu Sans, sans-serif" font-size="25" font-weight="700">Fixed card counts across the twelve-level run</text>
+
+  <rect x="65" y="126" width="16" height="16" rx="3" class="bomb"/><text x="90" y="140" class="small">bomb</text>
+  <rect x="155" y="126" width="16" height="16" rx="3" class="one"/><text x="180" y="140" class="small">×1</text>
+  <rect x="230" y="126" width="16" height="16" rx="3" class="two"/><text x="255" y="140" class="small">×2</text>
+  <rect x="305" y="126" width="16" height="16" rx="3" class="three"/><text x="330" y="140" class="small">×3</text>
+  <text x="270" y="171" class="label">BAR LENGTH = CELL COUNT</text>
+  <text x="965" y="171" class="label">BOMB DENSITY</text>
+
+  <!-- Levels 1-8: 5 × 5, 25 cells -->
+  <text x="66" y="205" class="level">L01</text><text x="125" y="205" class="small">5 × 5</text>
+  <rect x="270" y="184" width="108" height="28" rx="5" class="bomb"/><text x="324" y="203" text-anchor="middle" class="count">6</text>
+  <rect x="378" y="184" width="270" height="28" class="one"/><text x="513" y="203" text-anchor="middle" class="count">15</text>
+  <rect x="648" y="184" width="54" height="28" class="two"/><text x="675" y="203" text-anchor="middle" class="count">3</text>
+  <rect x="702" y="184" width="18" height="28" rx="5" class="three"/>
+  <text x="980" y="204" class="density">24.0%</text>
+
+  <text x="66" y="243" class="level">L02</text><text x="125" y="243" class="small">5 × 5</text>
+  <rect x="270" y="222" width="126" height="28" rx="5" class="bomb"/><text x="333" y="241" text-anchor="middle" class="count">7</text>
+  <rect x="396" y="222" width="216" height="28" class="one"/><text x="504" y="241" text-anchor="middle" class="count">12</text>
+  <rect x="612" y="222" width="72" height="28" class="two"/><text x="648" y="241" text-anchor="middle" class="count">4</text>
+  <rect x="684" y="222" width="36" height="28" rx="5" class="three"/><text x="702" y="241" text-anchor="middle" class="count">2</text>
+  <text x="980" y="242" class="density">28.0%</text>
+
+  <text x="66" y="281" class="level">L03</text><text x="125" y="281" class="small">5 × 5</text>
+  <rect x="270" y="260" width="144" height="28" rx="5" class="bomb"/><text x="342" y="279" text-anchor="middle" class="count">8</text>
+  <rect x="414" y="260" width="162" height="28" class="one"/><text x="495" y="279" text-anchor="middle" class="count">9</text>
+  <rect x="576" y="260" width="90" height="28" class="two"/><text x="621" y="279" text-anchor="middle" class="count">5</text>
+  <rect x="666" y="260" width="54" height="28" rx="5" class="three"/><text x="693" y="279" text-anchor="middle" class="count">3</text>
+  <text x="980" y="280" class="density">32.0%</text>
+
+  <text x="66" y="319" class="level">L04</text><text x="125" y="319" class="small">5 × 5</text>
+  <rect x="270" y="298" width="144" height="28" rx="5" class="bomb"/><text x="342" y="317" text-anchor="middle" class="count">8</text>
+  <rect x="414" y="298" width="144" height="28" class="one"/><text x="486" y="317" text-anchor="middle" class="count">8</text>
+  <rect x="558" y="298" width="108" height="28" class="two"/><text x="612" y="317" text-anchor="middle" class="count">6</text>
+  <rect x="666" y="298" width="54" height="28" rx="5" class="three"/><text x="693" y="317" text-anchor="middle" class="count">3</text>
+  <text x="980" y="318" class="density">32.0%</text>
+
+  <text x="66" y="357" class="level">L05</text><text x="125" y="357" class="small">5 × 5</text>
+  <rect x="270" y="336" width="180" height="28" rx="5" class="bomb"/><text x="360" y="355" text-anchor="middle" class="count">10</text>
+  <rect x="450" y="336" width="72" height="28" class="one"/><text x="486" y="355" text-anchor="middle" class="count">4</text>
+  <rect x="522" y="336" width="126" height="28" class="two"/><text x="585" y="355" text-anchor="middle" class="count">7</text>
+  <rect x="648" y="336" width="72" height="28" rx="5" class="three"/><text x="684" y="355" text-anchor="middle" class="count">4</text>
+  <text x="980" y="356" class="density">40.0%</text>
+
+  <text x="66" y="395" class="level">L06</text><text x="125" y="395" class="small">5 × 5</text>
+  <rect x="270" y="374" width="180" height="28" rx="5" class="bomb"/><text x="360" y="393" text-anchor="middle" class="count">10</text>
+  <rect x="450" y="374" width="54" height="28" class="one"/><text x="477" y="393" text-anchor="middle" class="count">3</text>
+  <rect x="504" y="374" width="144" height="28" class="two"/><text x="576" y="393" text-anchor="middle" class="count">8</text>
+  <rect x="648" y="374" width="72" height="28" rx="5" class="three"/><text x="684" y="393" text-anchor="middle" class="count">4</text>
+  <text x="980" y="394" class="density">40.0%</text>
+
+  <text x="66" y="433" class="level">L07</text><text x="125" y="433" class="small">5 × 5</text>
+  <rect x="270" y="412" width="180" height="28" rx="5" class="bomb"/><text x="360" y="431" text-anchor="middle" class="count">10</text>
+  <rect x="450" y="412" width="36" height="28" class="one"/><text x="468" y="431" text-anchor="middle" class="count">2</text>
+  <rect x="486" y="412" width="144" height="28" class="two"/><text x="558" y="431" text-anchor="middle" class="count">8</text>
+  <rect x="630" y="412" width="90" height="28" rx="5" class="three"/><text x="675" y="431" text-anchor="middle" class="count">5</text>
+  <text x="980" y="432" class="density">40.0%</text>
+
+  <text x="66" y="471" class="level">L08</text><text x="125" y="471" class="small">5 × 5</text>
+  <rect x="270" y="450" width="180" height="28" rx="5" class="bomb"/><text x="360" y="469" text-anchor="middle" class="count">10</text>
+  <rect x="450" y="450" width="180" height="28" class="two"/><text x="540" y="469" text-anchor="middle" class="count">10</text>
+  <rect x="630" y="450" width="90" height="28" rx="5" class="three"/><text x="675" y="469" text-anchor="middle" class="count">5</text>
+  <text x="980" y="470" class="density">40.0%</text>
+
+  <line x1="64" y1="495" x2="1136" y2="495" stroke="#ff9a4d" stroke-width="2" stroke-dasharray="7 7"/>
+  <rect x="270" y="483" width="438" height="24" rx="12" fill="#0d1626"/>
+  <text x="489" y="500" text-anchor="middle" fill="#ffb06f" font-family="DejaVu Sans Mono, monospace" font-size="13" font-weight="700">LEVEL 9 · 6 × 6 RESET · +11 CELLS</text>
+
+  <!-- Levels 9-12: 6 × 6, 36 cells -->
+  <text x="66" y="539" class="level">L09</text><text x="125" y="539" class="small">6 × 6</text>
+  <rect x="270" y="518" width="234" height="28" rx="5" class="bomb"/><text x="387" y="537" text-anchor="middle" class="count">13</text>
+  <rect x="504" y="518" width="234" height="28" class="one"/><text x="621" y="537" text-anchor="middle" class="count">13</text>
+  <rect x="738" y="518" width="126" height="28" class="two"/><text x="801" y="537" text-anchor="middle" class="count">7</text>
+  <rect x="864" y="518" width="54" height="28" rx="5" class="three"/><text x="891" y="537" text-anchor="middle" class="count">3</text>
+  <text x="980" y="538" class="density">36.1%</text>
+
+  <text x="66" y="577" class="level">L10</text><text x="125" y="577" class="small">6 × 6</text>
+  <rect x="270" y="556" width="252" height="28" rx="5" class="bomb"/><text x="396" y="575" text-anchor="middle" class="count">14</text>
+  <rect x="522" y="556" width="198" height="28" class="one"/><text x="621" y="575" text-anchor="middle" class="count">11</text>
+  <rect x="720" y="556" width="144" height="28" class="two"/><text x="792" y="575" text-anchor="middle" class="count">8</text>
+  <rect x="864" y="556" width="54" height="28" rx="5" class="three"/><text x="891" y="575" text-anchor="middle" class="count">3</text>
+  <text x="980" y="576" class="density">38.9%</text>
+
+  <text x="66" y="615" class="level">L11</text><text x="125" y="615" class="small">6 × 6</text>
+  <rect x="270" y="594" width="270" height="28" rx="5" class="bomb"/><text x="405" y="613" text-anchor="middle" class="count">15</text>
+  <rect x="540" y="594" width="162" height="28" class="one"/><text x="621" y="613" text-anchor="middle" class="count">9</text>
+  <rect x="702" y="594" width="162" height="28" class="two"/><text x="783" y="613" text-anchor="middle" class="count">9</text>
+  <rect x="864" y="594" width="54" height="28" rx="5" class="three"/><text x="891" y="613" text-anchor="middle" class="count">3</text>
+  <text x="980" y="614" class="density">41.7%</text>
+
+  <text x="66" y="653" class="level">L12</text><text x="125" y="653" class="small">6 × 6</text>
+  <rect x="270" y="632" width="288" height="28" rx="5" class="bomb"/><text x="414" y="651" text-anchor="middle" class="count">16</text>
+  <rect x="558" y="632" width="126" height="28" class="one"/><text x="621" y="651" text-anchor="middle" class="count">7</text>
+  <rect x="684" y="632" width="180" height="28" class="two"/><text x="774" y="651" text-anchor="middle" class="count">10</text>
+  <rect x="864" y="632" width="54" height="28" rx="5" class="three"/><text x="891" y="651" text-anchor="middle" class="count">3</text>
+  <text x="980" y="652" class="density">44.4%</text>
+
+  <text x="64" y="694" class="small">Level 9 expands the constraint geometry while density dips 40.0% → 36.1%; levels 10–12 then increase bombs within the 6 × 6 board.</text>
+</svg>
