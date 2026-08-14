@@ -4,14 +4,16 @@ RIVEMU_SDK ?= $(RIV_HOME)/rivos-sdk.ext2
 HOST_CC ?= cc
 TEST_BUILD_DIR ?= ../.test-build
 STRICT_BUILD_DIR ?= ../.strict-build
+RIV_HEADER := $(STRICT_BUILD_DIR)/include/riv.h
 GAME_CPPFLAGS ?=
 
 GAME_SOURCES := bombflip.c game.c board.c render.c title.c audio.c
 GAME_OBJECTS := $(GAME_SOURCES:.c=.o)
-GAME_HEADERS := state.h controls.h game.h board.h render.h title.h audio.h riv.h seqt.h
+GAME_HEADERS := state.h controls.h game.h board.h render.h title.h audio.h seqt.h
 HOST_CFLAGS := -std=c11 -Wall -Wextra -Wpedantic -Werror -fanalyzer -fcommon \
-	-DRIV_IMPORT_CONTEXT -I. -I../tests
-STRICT_CFLAGS := -std=c11 -Wall -Wextra -Wpedantic -Wshadow -Werror -fanalyzer -I.
+	-DRIV_IMPORT_CONTEXT -I$(STRICT_BUILD_DIR)/include -I. -I../tests
+STRICT_CFLAGS := -std=c11 -Wall -Wextra -Wpedantic -Wshadow -Werror -fanalyzer \
+	-I$(STRICT_BUILD_DIR)/include -I.
 
 .PHONY: all clean run smoke strict test
 
@@ -37,7 +39,13 @@ run: bombflip.sqfs
 smoke: bombflip.sqfs
 	$(RIVEMU) -quiet -no-window -no-audio -stop-frame=180 -cartridge=bombflip.sqfs
 
-strict:
+$(RIV_HEADER):
+	mkdir -p $(STRICT_BUILD_DIR)/include
+	RIVEMU_SDK=$(RIVEMU_SDK) $(RIVEMU) -quiet -no-window -sdk \
+		-exec "cat /usr/include/riv.h" > $(RIV_HEADER)
+	@test -s $(RIV_HEADER)
+
+strict: $(RIV_HEADER)
 	mkdir -p $(STRICT_BUILD_DIR)/release $(STRICT_BUILD_DIR)/debug $(STRICT_BUILD_DIR)/cheats
 	@set -e; for source in $(GAME_SOURCES); do \
 		object=$${source%.c}.o; \
@@ -49,7 +57,7 @@ strict:
 			-o $(STRICT_BUILD_DIR)/cheats/$$object; \
 	done
 
-test:
+test: $(RIV_HEADER)
 	mkdir -p $(TEST_BUILD_DIR)
 	$(HOST_CC) $(HOST_CFLAGS) ../tests/test_board.c ../tests/test_support.c board.c -lm \
 		-o $(TEST_BUILD_DIR)/test_board
@@ -63,8 +71,8 @@ clean:
 	rm -f $(GAME_OBJECTS) bombflip bombflip.sqfs
 	rm -f $(TEST_BUILD_DIR)/test_board $(TEST_BUILD_DIR)/test_game
 	rm -f $(STRICT_BUILD_DIR)/release/*.o $(STRICT_BUILD_DIR)/debug/*.o \
-		$(STRICT_BUILD_DIR)/cheats/*.o
+		$(STRICT_BUILD_DIR)/cheats/*.o $(RIV_HEADER)
 	rmdir $(STRICT_BUILD_DIR)/release $(STRICT_BUILD_DIR)/debug \
-		$(STRICT_BUILD_DIR)/cheats 2>/dev/null || true
+		$(STRICT_BUILD_DIR)/cheats $(STRICT_BUILD_DIR)/include 2>/dev/null || true
 	rmdir $(STRICT_BUILD_DIR) 2>/dev/null || true
 	rmdir $(TEST_BUILD_DIR) 2>/dev/null || true

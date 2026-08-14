@@ -1,6 +1,6 @@
 # Validation
 
-Bomb Flip has two validation layers: host-side C checks for rules and state transitions, and RIVES checks for the real build, package and runtime.
+Bomb Flip has two validation layers: host-side C checks for rules and state transitions, and RIVES checks for the real build, package and runtime. The repository does not vendor the RIV API header: `strict` and `test` obtain `riv.h` from the installed official RIV SDK and copy it only into a temporary build directory.
 
 ## Host compilation
 
@@ -75,9 +75,9 @@ make -C src clean all
 make -C src smoke
 ~~~
 
-The latest recorded build on 13 August 2026 used RIVEMU/libriv 0.3.0 and RIV OS SDK 0.3.0. The six modules were compiled with `riv-opt-flags -Ospeed`, linked, stripped and packaged.
+The latest recorded build on 14 August 2026 used RIVEMU/libriv 0.3.0 and RIV OS SDK 0.3.0. The six modules were compiled with `riv-opt-flags -Ospeed`, linked, stripped and packaged.
 
-`bombflip.sqfs` completed a 180-frame headless run at the official 96 MB runtime limit and measured 69,632 bytes, below the 524,288-byte cartridge limit.
+`bombflip.sqfs` completed a 180-frame headless run at the official 96 MB runtime limit and measured 69,632 bytes, below the current 262,144-byte RIVES upload limit.
 
 The same cartridge was also opened in the official web emulator. The title rendered, Z started a run, movement changed the selection, a bomb reveal played and the browser console reported no errors.
 

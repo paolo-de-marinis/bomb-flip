@@ -31,7 +31,7 @@ Bomb Flip is an independent, unaffiliated cartridge. Pokémon and related names 
 
 This is the maintained version of the source, not an archival copy of the cartridge published in 2024. The exact publication snapshot is no longer retained. The present code contains later fixes, tests, documentation and refactoring; the published cartridge remains available at the RIVES link above.
 
-Paolo De Marinis designed the Bomb Flip rules, scoring, timer, scanners, folding system and level progression, and wrote most of the original gameplay code. Cursor was used mainly for animation work and as implementation support. Paolo integrated, tested, debugged and refined the complete cartridge. Current maintenance also uses OpenAI Codex.
+Paolo De Marinis designed the Bomb Flip rules, scoring, timer, scanners, folding system and level progression, and wrote most of the original gameplay code. Cursor was used mainly for animation work and as implementation support. Paolo integrated, tested, debugged and refined the complete cartridge. Since 2026, OpenAI Codex has assisted with repository maintenance, including refactoring, tests and documentation. Paolo reviewed, integrated and validated these changes.
 
 ## Gameplay and controls
 
@@ -94,6 +94,8 @@ Running an existing cartridge requires [RIVEMU](https://rives.io/docs/riv/gettin
 ~/.riv/rivos-sdk.ext2
 ~~~
 
+The repository deliberately does not vendor `riv.h`; builds use the API header supplied by the installed RIV SDK. Host-side `strict` and `test` checks copy that SDK header only into a temporary build directory.
+
 Build and run:
 
 ~~~sh
@@ -125,9 +127,10 @@ make -C src smoke
 - [Code overview](docs/code-overview.md)
 - [Validation](docs/validation.md)
 - [Third-party notices](THIRD_PARTY_NOTICES.md)
+- [SEQT GPLv3 §7 exception](SEQT_EXCEPTION.md)
 
 Related project: [Slither Slide source](https://github.com/paolo-de-marinis/slither-slide) · [original Slither Slide cartridge](https://app.rives.io/cartridges/7654435bf067)
 
 ## License
 
-Except for the material listed in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md), the source, documentation and original assets are Copyright © 2024–2026 Paolo De Marinis and licensed under the [GNU General Public License v3.0 or later](LICENSE).
+Except for the third-party material listed in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md), the source, documentation and original assets are Copyright © 2024–2026 Paolo De Marinis and licensed under the [GNU General Public License, version 3 or later](LICENSE), with the narrow [SEQT additional permission](SEQT_EXCEPTION.md).
