@@ -1,10 +1,27 @@
-# Mathematics and design: Bomb Flip and Voltorb Flip
+# How Bomb Flip turns clues into a timed decision problem
 
-Bomb Flip is directly inspired by Voltorb Flip, the minigame in the non-Japanese versions of *Pokémon HeartGold* and *SoulSilver*. Both games use hidden values $0,1,2,3$, give a value sum and hazard count for every row and column, and complete a board after every ×2 and ×3 has been revealed.
+A Bomb Flip position contains two coupled problems.
 
-This note separates that inherited model from the rules designed for Bomb Flip. Bomb Flip behavior is taken from the C source in this repository. Details of the original game are checked against the [pret/pokeheartgold community decompilation](https://github.com/pret/pokeheartgold/tree/master/src/voltorb_flip) and the sources listed at the end.
+The first is discrete: row and column clues restrict the possible assignments of
+the hidden values $0,1,2,3$. The second is temporal: the player must decide how
+much of the current level to expose before revealing a bomb, running out of time
+or voluntarily banking half of the level with Fold. A clue can therefore make a
+cell safer without making revealing it the best action for the complete run.
 
-## 1. Shared model and Bomb Flip changes
+This note derives both layers from the C source and then connects them. Bomb
+Flip is directly inspired by Voltorb Flip, the minigame in the non-Japanese
+versions of *Pokémon HeartGold* and *SoulSilver*. Both games use the same hidden
+card alphabet, display a value sum and hazard count for every row and column,
+and complete a board after every ×2 and ×3 has been revealed. The timer,
+additive score, scanners, Fold and twelve-level progression are separate Bomb
+Flip rules.
+
+Bomb Flip behavior is taken from [`board.c`](../src/board.c) and
+[`game.c`](../src/game.c). Details of the original game are checked against the
+[pret/pokeheartgold community decompilation](https://github.com/pret/pokeheartgold/tree/master/src/voltorb_flip)
+and the sources listed at the end.
+
+## 1. What is inherited and what changes
 
 | Inherited from Voltorb Flip | Designed for Bomb Flip |
 | --- | --- |
@@ -196,10 +213,24 @@ For comparison, an exact model of Voltorb Flip also needs a board-type variable 
 
 ## 8. Score, time and stopping
 
-If $q_1,q_2,q_3$ safe cards have been revealed in the current Bomb Flip level, the card score is
+The clue state $H$ is not enough to determine the consequence of an action. The
+same hidden cell can be worth revealing early in a level and worth avoiding when
+the remaining time is small or the current unbanked score is large. Before a
+terminal transition, the relevant run state can be written as
 
 ~~~math
-C_{\mathrm{cards}}=100(q_1+2q_2+3q_3).
+z=(\ell,H,t,B,S,u),
+~~~
+
+where $\ell$ is the level, $t$ is the remaining time, $B$ is the score already
+banked in `totalCoins`, $S$ is the exposed current-level score in `levelCoins`,
+and $u$ is the number of available scanner uses.
+
+If $q_1,q_2,q_3$ safe cards have been revealed in the current level, then before
+the completion bonus
+
+~~~math
+S=C_{\mathrm{cards}}=100(q_1+2q_2+3q_3).
 ~~~
 
 Level $\ell$ starts with
@@ -216,29 +247,77 @@ C_{\mathrm{time}}=\lfloor 10t\rfloor,
 
 where $t$ is the remaining time.
 
-Fold terminates the run and banks
+Fold terminates the run and changes the final score to
 
 ~~~math
-C_{\mathrm{fold}}=\left\lfloor\frac{C_{\mathrm{cards}}}{2}\right\rfloor
+B+\left\lfloor\frac{S}{2}\right\rfloor.
 ~~~
 
-from the current level, in addition to earlier completed levels.
+A bomb also terminates the run, but keeps only $B$: the current $S$ is never
+added. Timeout is more severe and sets both the current and previously banked
+score to zero. Completing the board instead produces
 
-A bomb ends the run without banking the current level, but preserves earlier completed levels. Timeout is more severe and resets the entire run score to zero.
+~~~math
+B'=B+S+\lfloor10t\rfloor.
+~~~
+
+If $\ell<12$, this becomes the banked score of the next level. At level 12 it is
+the completed-run score.
+
+### Scanner as an information action
+
+Scanner rewards are assigned only after the values of the board have been
+generated. Their locations are safe and distinct. When a scanner card of value
+$v$ is revealed, the ordinary score and time changes still occur and the game
+also applies
+
+~~~math
+u\leftarrow u+v.
+~~~
+
+Spending one use temporarily displays the selected hidden card and then turns it
+face down again. The cell is not inserted into the revealed set $R$, so a ×2 or
+×3 seen through the scanner still has to be revealed normally before the board
+is complete. The player may retain the information, but the cartridge does not
+store a permanent memo mark.
 
 Scanner previews and Fold confirmation pause the countdown. This was a deliberate rule: using an information reward or considering the stopping decision does not itself consume time.
+
+### Worked run-state example
+
+Suppose earlier levels have banked $B=1500$, the current level has $S=700$, and
+$t=38.4$ seconds remain. Revealing a ×3 changes the exposed state to
+
+~~~math
+S'=700+300=1000,
+\qquad
+t'=38.4+9=47.4.
+~~~
+
+Folding after that reveal ends the run with
+
+~~~math
+1500+\left\lfloor\frac{1000}{2}\right\rfloor=2000.
+~~~
+
+Revealing a bomb instead leaves 1500, whereas timeout leaves 0. If the ×3 was
+the last unrevealed high card, completion banks the full current score and the
+time bonus:
+
+~~~math
+1500+1000+\lfloor10\cdot47.4\rfloor=2974.
+~~~
+
+This is why Bomb Flip cannot be reduced to choosing the cell with the smallest
+bomb probability. The same board information interacts with three different
+amounts: time, exposed level score and score already secured.
 
 Voltorb Flip uses a multiplicative payout, $2^{q_2}3^{q_3}$, and has no countdown. Bomb Flip therefore changes the risk model from multiplication alone to an additive score coupled to time and an explicit stopping choice.
 
 ### Bellman interpretation
 
-The choice between revealing a card, using the scanner and folding can be written as a small Bellman equation. Let
-
-~~~math
-z=(\ell,H,t,B,S,u)
-~~~
-
-describe the current level, the visible information, the remaining time, the score already banked, the score of the current level and the remaining scanner uses. Folding has the certain value
+The choice between revealing a card, using the scanner and folding can now be
+written as a small Bellman equation. Folding has the certain value
 
 ~~~math
 F(z)=B+\left\lfloor\frac{S}{2}\right\rfloor.

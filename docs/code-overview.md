@@ -1,6 +1,16 @@
 # Bomb Flip code overview
 
-Bomb Flip is a procedural C program divided into six production modules. The central state is explicit, and the update function reads like a state machine rather than hiding control flow behind an object framework.
+The shortest way to understand Bomb Flip is to follow one run, not to memorize
+six filenames. `bombflip.c` decides whether the application is on the title,
+transition, board or ending screen. Inside the board screen, `game.c` advances
+an explicit `GameState`; `board.c` supplies the hidden matrix and its clues. A
+terminal event then decides whether the current level is banked, halved, lost or
+used to reset the whole run.
+
+The program is procedural C. State is explicit, and the update function reads
+like a state machine rather than hiding control flow behind an object framework.
+The mathematical meaning of that state is derived in
+[How Bomb Flip turns clues into a timed decision problem](mathematics.md).
 
 ## Application loop
 
@@ -31,13 +41,18 @@ while (riv_present()) {
 `state.h` contains the constants and data types shared by the modules. `GameState` groups:
 
 - the 6 × 6 maximum board and its clues;
-- current level, score and countdown;
+- current level, banked score, exposed level score and countdown;
 - selection and reveal animation;
 - the explicit gameplay phase;
 - scanner positions and uses;
 - timeout, explosion and level-clear timers.
 
 The fields are grouped by purpose rather than wrapped in accessor functions. This makes the complete state inspectable in one place and keeps the small modules easy to follow.
+
+Two fields must not be conflated. `totalCoins` contains score secured by earlier
+completed levels. `levelCoins` contains score earned on the current board and is
+still exposed to the current outcome. Completion transfers all of it, Fold
+transfers half, a bomb transfers none, and timeout clears `totalCoins` as well.
 
 `GamePhase` separates active play from animations and terminal transitions:
 
@@ -62,6 +77,11 @@ The fields are grouped by purpose rather than wrapped in accessor functions. Thi
 4. assign one scanner tile on levels 1–8 or two on levels 9–12.
 
 The random scanner search has a deterministic row-major fallback. Scanner tiles are always safe and distinct.
+
+The scanner coordinates do not replace tile values. They mark safe cells that
+grant a reward when revealed: a scanner card of value $v$ adds $v$ uses. Each
+use can preview another selected card, but previewing does not set that tile's
+`revealed` field.
 
 `board_all_high_cards_flipped()` implements the completion rule directly by scanning for an unrevealed ×2 or ×3.
 

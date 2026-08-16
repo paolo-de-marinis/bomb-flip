@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install RIVEMU and RIV SDK
+        run: |
+          mkdir -p "$HOME/.riv"
+          curl -fsSL -o "$HOME/.riv/rivemu" \
+            https://github.com/rives-io/riv/releases/download/v0.3-rc16/rivemu-linux-amd64
+          curl -fsSL -o "$HOME/.riv/rivos-sdk.ext2" \
+            https://github.com/rives-io/riv/releases/download/v0.3-rc16/rivos-sdk.ext2
+          chmod +x "$HOME/.riv/rivemu"
+          "$HOME/.riv/rivemu" -version
+
+      - name: Verify
+        run: |
+          make -C src strict
+          make -C src test
+          make -C src clean all
+          make -C src smoke
