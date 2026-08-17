@@ -198,12 +198,11 @@ P(a_{ij}=k)=\frac{X_k}{N},\quad k=1,2,3.
 The number of scanner rewards introduced in level $\ell$ is
 
 ~~~math
-m(\ell)=
-\begin{cases}
-0, & 1\leq \ell\leq 3,\\
-1, & 4\leq \ell\leq 8,\\
-2, & 9\leq \ell\leq 12.
-\end{cases}
+\begin{aligned}
+m(\ell)&=0 &&\text{for }1\leq\ell\leq3,\\
+m(\ell)&=1 &&\text{for }4\leq\ell\leq8,\\
+m(\ell)&=2 &&\text{for }9\leq\ell\leq12.
+\end{aligned}
 ~~~
 
 Their positions are selected only after the board values have been generated.
