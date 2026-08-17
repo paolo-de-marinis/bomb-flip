@@ -31,6 +31,7 @@ make -C src test
 - all twelve level compositions;
 - row and column value sums and bomb counts;
 - the ×2/×3 completion predicate;
+- no scanner rewards on levels 1–3, one on levels 4–8 and two on levels 9–12;
 - safe, distinct scanner placement;
 - repeatability for a fixed entropy seed;
 - the scanner fallback after repeated invalid random choices.
@@ -89,8 +90,14 @@ The README animation comes from the normal build with debug and cheats disabled.
 5f2e81b4c393d12ae54ef21fc97aa3bf5723e319743a19c48fd93df3d625cb07
 ~~~
 
-It covers the title, run start, navigation, Fold open/close, scanner reveal and scanner preview. The 256 × 256 frames were enlarged with nearest-neighbour sampling; the game pixels were not redrawn.
+It covers the title, run start, navigation, Fold open/close and two safe-card
+reveals on level 1. Because levels 1–3 contain no scanner reward, this short tape
+does not show scanner acquisition or preview. The 256 × 256 frames were enlarged
+with nearest-neighbour sampling; the game pixels were not redrawn.
 
 ## What is not covered
 
-A longer input tape or human playthrough is still needed for the complete level progression, both scanner orders in live rendering, the final ending, audio timing and screenshot comparison across all transitions.
+A longer input tape or human playthrough is still needed for the complete level
+progression, scanner acquisition from level 4, both scanner orders on levels
+9–12, the final ending, audio timing and screenshot comparison across all
+transitions.

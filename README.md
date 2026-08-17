@@ -24,7 +24,7 @@ The rest of the progression was redesigned for this cartridge:
 
 - safe cards give an additive score and extra time;
 - the run has a countdown;
-- scanners temporarily preview hidden cards;
+- scanner rewards, introduced at level 4, temporarily preview hidden cards;
 - Fold ends the run and banks half of the current level score;
 - there are twelve sequential levels;
 - levels 9–12 use a 6 × 6 grid.
@@ -35,15 +35,15 @@ Bomb Flip is an independent, unaffiliated cartridge. Pokémon and related names 
 
 ## What is in this repository
 
-This is the maintained version of the source, not an archival copy of the cartridge published in 2024. The exact publication snapshot is no longer retained. The present code contains later fixes, tests, documentation and refactoring; the published cartridge remains available at the RIVES link above.
+This is the maintained version of the source, not an archival copy of the cartridge published in 2024. The exact publication snapshot is no longer retained. The present code contains later fixes, tests, documentation and refactoring; the published cartridge remains available at the RIVES link above. The scanner progression described below follows the published cartridge: no reward on levels 1–3, one on levels 4–8 and two on levels 9–12.
 
 Paolo De Marinis designed the Bomb Flip rules, scoring, timer, scanners, folding system and level progression, and wrote most of the original gameplay code. Cursor was used mainly for animation work and as implementation support. Paolo integrated, tested, debugged and refined the complete cartridge. Since 2026, OpenAI Codex has assisted with repository maintenance, including refactoring, tests and documentation. Paolo reviewed, integrated and validated these changes.
 
 ## Gameplay and controls
 
-Reveal every ×2 and ×3 without selecting a bomb. Safe cards add coins and time. Scanner cards grant a limited number of previews. Fold ends the run and keeps half of the coins earned in the current level.
+Reveal every ×2 and ×3 without selecting a bomb. Safe cards add coins and time. From level 4, one or two safe cards also carry a hidden scanner reward that grants a limited number of previews. Fold ends the run and keeps half of the coins earned in the current level.
 
-![Bomb Flip gameplay: title, board navigation, Fold decision and Scanner preview](docs/media/bomb-flip-gameplay.gif)
+![Bomb Flip gameplay: title, board navigation, Fold decision and safe-card reveals](docs/media/bomb-flip-gameplay.gif)
 
 | Action | Keyboard | RIVES gamepad |
 | --- | --- | --- |
@@ -65,10 +65,12 @@ exposed score earned on the current board. Write $S$ for this second amount.
 
 During active play, the countdown advances before ordinary input is handled. A
 safe card of value $v$ adds $100v$ to `levelCoins` and $3v$ seconds, up to the
-150-second cap. One safe card is also marked as a scanner reward on levels 1–8;
-two are marked on levels 9–12. Revealing one of those cards grants $v$ scanner
-uses. A use temporarily shows the selected hidden card without marking it as
-revealed.
+150-second cap. The first three levels contain no scanner reward. On levels 4–8,
+one safe card is selected at random as a hidden scanner reward; on levels 9–12,
+two distinct safe cards are selected. Revealing one of these selected cards
+grants $v$ scanner uses. Revealing any other safe card grants only its ordinary
+coin and time rewards. A scanner use temporarily shows the selected hidden card
+without marking it as revealed.
 
 The run then branches according to the event that occurs:
 

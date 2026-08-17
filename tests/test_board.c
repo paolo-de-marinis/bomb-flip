@@ -5,6 +5,13 @@
 #include <stdio.h>
 #include <string.h>
 
+static int expected_scanner_count(int level) {
+    if (level <= 3) {
+        return 0;
+    }
+    return level <= 8 ? 1 : 2;
+}
+
 static void verify_level(int level) {
     GameState game = {0};
     game.level = level;
@@ -52,15 +59,32 @@ static void verify_level(int level) {
     }
     assert(board_all_high_cards_flipped(&game));
 
-    int expectedScanners = level >= 9 ? 2 : 1;
+    int expectedScanners = expected_scanner_count(level);
     assert(game.scannerCount == expectedScanners);
-    assert(game.hasScanner);
+    assert(game.hasScanner == (expectedScanners > 0));
     for (int i = 0; i < game.scannerCount; i++) {
         assert(game.grid[game.scannerY[i]][game.scannerX[i]].value > 0);
         for (int j = 0; j < i; j++) {
             assert(game.scannerX[i] != game.scannerX[j] ||
                    game.scannerY[i] != game.scannerY[j]);
         }
+    }
+}
+
+static void verify_scanner_is_absent_before_level_four(void) {
+    GameState game = {.level = 3,
+                      .hasScanner = true,
+                      .scannerCount = MAX_SCANNERS};
+    board_clear(&game, board_grid_size(game.level));
+
+    board_assign_scanner_tiles(&game);
+
+    assert(game.scannerCount == 0);
+    assert(!game.hasScanner);
+    for (int i = 0; i < MAX_SCANNERS; i++) {
+        assert(game.scannerX[i] == -1);
+        assert(game.scannerY[i] == -1);
+        assert(!game.scannerRevealed[i]);
     }
 }
 
@@ -100,6 +124,7 @@ int main(void) {
         verify_level(level);
     }
     verify_deterministic_generation();
+    verify_scanner_is_absent_before_level_four();
     verify_scanner_fallback();
     puts("board invariants: ok");
     return 0;

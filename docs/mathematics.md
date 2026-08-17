@@ -195,7 +195,22 @@ P(a_{ij}=0)=\frac BN,
 P(a_{ij}=k)=\frac{X_k}{N},\quad k=1,2,3.
 ~~~
 
-Scanner positions are selected after the board. They must be safe and distinct, so they do not alter the board distribution. After one hundred failed random attempts, a row-major fallback guarantees that assignment finishes.
+The number of scanner rewards introduced in level $\ell$ is
+
+~~~math
+m(\ell)=
+\begin{cases}
+0, & 1\leq \ell\leq 3,\\
+1, & 4\leq \ell\leq 8,\\
+2, & 9\leq \ell\leq 12.
+\end{cases}
+~~~
+
+Their positions are selected only after the board values have been generated.
+Each selected position must be safe, and the two positions used from level 9
+must be distinct. The assignment therefore adds hidden reward metadata without
+changing $A$ or its probability distribution. After one hundred failed random
+attempts, a row-major fallback guarantees that assignment finishes.
 
 Voltorb Flip has a more involved generator. The reconstructed source uses several board configurations per level and rejects arrangements with too many risk-free multipliers. Exact probabilities for the original game therefore depend on the hidden board type and its acceptance rule; Bomb Flip has no corresponding filter.
 
@@ -266,10 +281,11 @@ the completed-run score.
 
 ### Scanner as an information action
 
-Scanner rewards are assigned only after the values of the board have been
-generated. Their locations are safe and distinct. When a scanner card of value
-$v$ is revealed, the ordinary score and time changes still occur and the game
-also applies
+Levels 1–3 have no scanner reward, so their boards cannot generate scanner
+uses. On levels 4–8, one safe card is secretly designated as the reward; on
+levels 9–12, two distinct safe cards are designated. This designation is not a
+property of every safe card. When a designated card of value $v$ is revealed,
+the ordinary score and time changes still occur and the game also applies
 
 ~~~math
 u\leftarrow u+v.
@@ -347,20 +363,20 @@ The cartridge does not calculate this equation. It is only a compact description
 
 ![Bomb Flip level composition and bomb density](media/bomb-flip-level-progression.svg)
 
-| Level | Grid | ×1 | ×2 | ×3 | Bombs | Bomb density |
-| ---: | :---: | ---: | ---: | ---: | ---: | ---: |
-| 1 | 5 × 5 | 15 | 3 | 1 | 6 | 24.0% |
-| 2 | 5 × 5 | 12 | 4 | 2 | 7 | 28.0% |
-| 3 | 5 × 5 | 9 | 5 | 3 | 8 | 32.0% |
-| 4 | 5 × 5 | 8 | 6 | 3 | 8 | 32.0% |
-| 5 | 5 × 5 | 4 | 7 | 4 | 10 | 40.0% |
-| 6 | 5 × 5 | 3 | 8 | 4 | 10 | 40.0% |
-| 7 | 5 × 5 | 2 | 8 | 5 | 10 | 40.0% |
-| 8 | 5 × 5 | 0 | 10 | 5 | 10 | 40.0% |
-| 9 | 6 × 6 | 13 | 7 | 3 | 13 | 36.1% |
-| 10 | 6 × 6 | 11 | 8 | 3 | 14 | 38.9% |
-| 11 | 6 × 6 | 9 | 9 | 3 | 15 | 41.7% |
-| 12 | 6 × 6 | 7 | 10 | 3 | 16 | 44.4% |
+| Level | Grid | ×1 | ×2 | ×3 | Bombs | Scanner rewards | Bomb density |
+| ---: | :---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 5 × 5 | 15 | 3 | 1 | 6 | 0 | 24.0% |
+| 2 | 5 × 5 | 12 | 4 | 2 | 7 | 0 | 28.0% |
+| 3 | 5 × 5 | 9 | 5 | 3 | 8 | 0 | 32.0% |
+| 4 | 5 × 5 | 8 | 6 | 3 | 8 | 1 | 32.0% |
+| 5 | 5 × 5 | 4 | 7 | 4 | 10 | 1 | 40.0% |
+| 6 | 5 × 5 | 3 | 8 | 4 | 10 | 1 | 40.0% |
+| 7 | 5 × 5 | 2 | 8 | 5 | 10 | 1 | 40.0% |
+| 8 | 5 × 5 | 0 | 10 | 5 | 10 | 1 | 40.0% |
+| 9 | 6 × 6 | 13 | 7 | 3 | 13 | 2 | 36.1% |
+| 10 | 6 × 6 | 11 | 8 | 3 | 14 | 2 | 38.9% |
+| 11 | 6 × 6 | 9 | 9 | 3 | 15 | 2 | 41.7% |
+| 12 | 6 × 6 | 7 | 10 | 3 | 16 | 2 | 44.4% |
 
 Level 1 exactly matches one original Voltorb Flip level-1 composition. Levels 2–8 use different tuples, and the four 6 × 6 configurations have no original analogue.
 

@@ -74,13 +74,18 @@ transfers half, a bomb transfers none, and timeout clears `totalCoins` as well.
 1. clear the fixed-capacity grid;
 2. place the configured non-×1 cards at random unused positions;
 3. calculate row and column clues;
-4. assign one scanner tile on levels 1–8 or two on levels 9–12.
+4. assign the scanner rewards required by the current level: none on levels 1–3, one on levels 4–8 and two on levels 9–12.
 
-The random scanner search has a deterministic row-major fallback. Scanner tiles are always safe and distinct.
+The assignment happens after the board values have been generated. Each scanner
+reward is attached to a randomly selected safe cell, and the coordinates remain
+hidden until that card is revealed. A deterministic row-major fallback is used
+only if the random search fails one hundred times. When two rewards are present,
+their cells are safe and distinct.
 
-The scanner coordinates do not replace tile values. They mark safe cells that
-grant a reward when revealed: a scanner card of value $v$ adds $v$ uses. Each
-use can preview another selected card, but previewing does not set that tile's
+The scanner coordinates do not replace tile values, and an ordinary safe card
+does not grant a scanner use. Only a safe cell selected as a scanner reward does
+so: when revealed, a scanner card of value $v$ adds $v$ uses. Each use can
+preview another selected card, but previewing does not set that tile's
 `revealed` field.
 
 `board_all_high_cards_flipped()` implements the completion rule directly by scanning for an unrevealed ×2 or ×3.
@@ -101,7 +106,7 @@ Each step may return early when it changes the phase. For example, selecting a b
 
 - bombs start the reveal/explosion sequence;
 - safe cards add `100 * value` coins and `3 * value` seconds;
-- a scanner tile adds a number of uses equal to its value;
+- a designated scanner card adds a number of uses equal to its value;
 - revealing the last required high card banks the level score and starts the clear sequence.
 
 The countdown is capped at 150 seconds.
@@ -151,4 +156,8 @@ The outcard is refreshed during active play and again when the run ends.
 
 ## Tests
 
-`tests/test_board.c` checks every level composition, clue totals, completion and scanner assignment. `tests/test_game.c` exercises Fold, bomb, timeout, scanner, modal timing, simultaneous inputs and the cheat completion path with a deterministic RIVES test double.
+`tests/test_board.c` checks every level composition, clue totals, completion and
+the complete scanner progression, including its absence before level 4.
+`tests/test_game.c` exercises Fold, bomb, timeout, scanner, modal timing,
+simultaneous inputs and the cheat completion path with a deterministic RIVES
+test double.

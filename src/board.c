@@ -138,11 +138,26 @@ static bool assign_fallback_scanner_cell(GameState *game, int gridSize) {
     return false;
 }
 
+static int scanner_reward_count_for_level(int level) {
+    assert(level >= 1 && level <= MAX_LEVEL);
+    if (level < SCANNER_REWARD_START_LEVEL) {
+        return 0;
+    }
+    return level >= SECOND_SCANNER_REWARD_START_LEVEL ? 2 : 1;
+}
+
 void board_assign_scanner_tiles(GameState *game) {
     int gridSize = board_grid_size(game->level);
-    int scannersToAssign = game->level >= 9 ? 2 : 1;
+    int scannersToAssign = scanner_reward_count_for_level(game->level);
 
+    game->hasScanner = false;
     game->scannerCount = 0;
+    for (int i = 0; i < MAX_SCANNERS; i++) {
+        game->scannerX[i] = -1;
+        game->scannerY[i] = -1;
+        game->scannerRevealed[i] = false;
+    }
+
     for (int i = 0; i < scannersToAssign; i++) {
         bool assigned = assign_random_scanner_cell(game, gridSize);
         if (!assigned) {
@@ -150,7 +165,8 @@ void board_assign_scanner_tiles(GameState *game) {
         }
         assert(assigned);
     }
-    game->hasScanner = game->scannerCount == scannersToAssign;
+    game->hasScanner =
+        scannersToAssign > 0 && game->scannerCount == scannersToAssign;
 }
 
 void board_initialize(GameState *game) {
