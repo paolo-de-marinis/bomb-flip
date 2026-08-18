@@ -2,13 +2,27 @@
 
 ![Bomb Flip: timed strategy puzzle gameplay](docs/media/bomb-flip-hero.png)
 
-Bomb Flip is a timed strategy-puzzle RIVES cartridge inspired by Voltorb Flip from *Pokémon HeartGold* and *SoulSilver*. Each hidden card contains a ×1, ×2 or ×3 coin, or a bomb. Every row and column reports its value sum and bomb count.
+Bomb Flip is a timed strategy-puzzle RIVES cartridge inspired by Voltorb Flip from
+*Pokémon HeartGold* and *SoulSilver*. Its rules combine a hidden finite board with an explicit
+run state: clues constrain what may be under each card, while score, time, scanner uses and Fold
+determine what each reveal means for the current attempt.
 
-The clues create a finite deduction problem, but they do not describe the whole
-game. Bomb Flip couples that hidden-board problem to a run state: the player must
-decide whether to reveal a card, spend a scanner use or Fold before a bomb or the
-countdown ends the attempt. Board information and run management are therefore
-separate parts of the same decision.
+The implementation can be read through three objects:
+
+~~~math
+A
+\xrightarrow{\Gamma}
+\text{row/column clues},
+\qquad
+\sigma
+\xrightarrow{\text{action or phase update}}
+\sigma'.
+~~~
+
+Here $A$ is the hidden board, $\Gamma$ is the deterministic clue map, and $\sigma$ is the
+mutable gameplay state containing the current level, revealed cells, scanner metadata, banked
+score, exposed level score, timer, scanner uses and phase. Reveal, Scan, Fold, Bomb, Timeout and
+completion are different state transitions; they are not presentations of one generic outcome.
 
 - [Play the original Bomb Flip cartridge on RIVES](https://app.rives.io/cartridges/5932d82f5827)
 - [Cartesi Ecosystem Recap #14](https://cartesi.io/blog/ecosystem-recap-202410/)
@@ -16,32 +30,74 @@ separate parts of the same decision.
 
 The original cartridge was published on 5 October 2024.
 
-## Relation to Voltorb Flip
-
-Bomb Flip keeps the central clue system, card values and completion rule of Voltorb Flip: reveal every ×2 and ×3 while avoiding the zero-value hazards. Its first level also uses one of the original game's level-1 compositions.
-
-The rest of the progression was redesigned for this cartridge:
-
-- safe cards give an additive score and extra time;
-- the run has a countdown;
-- scanner rewards, introduced at level 4, temporarily preview hidden cards;
-- Fold ends the run and banks half of the current level score;
-- there are twelve sequential levels;
-- levels 9–12 use a 6 × 6 grid.
-
-Voltorb Flip instead uses multiplicative payouts, a memo pad, eight 5 × 5 levels, multiple board types and history-dependent progression. The shared model and the differences are documented with sources in [How Bomb Flip turns clues into a timed decision problem](docs/mathematics.md).
-
-Bomb Flip is an independent, unaffiliated cartridge. Pokémon and related names belong to their respective rights holders.
-
 ## What is in this repository
 
-This is the maintained version of the source, not an archival copy of the cartridge published in 2024. The exact publication snapshot is no longer retained. The present code contains later fixes, tests, documentation and refactoring; the published cartridge remains available at the RIVES link above. The scanner progression described below follows the published cartridge: no reward on levels 1–3, one on levels 4–8 and two on levels 9–12.
+This is the maintained version of the source, not an archival copy of the cartridge published in
+2024. The exact publication snapshot is no longer retained. The present repository contains
+later fixes, tests, documentation and refactoring; the original cartridge remains available at
+the RIVES link above.
 
-Paolo De Marinis designed the Bomb Flip rules, scoring, timer, scanners, folding system and level progression, and wrote most of the original gameplay code. Cursor was used mainly for animation work and as implementation support. Paolo integrated, tested, debugged and refined the complete cartridge. Since 2026, OpenAI Codex has assisted with repository maintenance, including refactoring, tests and documentation. Paolo reviewed, integrated and validated these changes.
+The scanner progression in the maintained source follows the published cartridge: no scanner
+reward on levels 1-3, one on levels 4-8 and two on levels 9-12.
+
+Paolo De Marinis designed the Bomb Flip rules, scoring, timer, scanners, folding system and level
+progression, and wrote most of the original gameplay code. Cursor was used mainly for animation
+work and as implementation support. Paolo integrated, tested, debugged and refined the complete
+cartridge. Since 2026, OpenAI Codex has assisted with repository maintenance, including
+refactoring, tests and documentation. Paolo reviewed, integrated and validated these changes.
+
+## Relation to Voltorb Flip
+
+Bomb Flip keeps the hidden alphabet $\{0,1,2,3\}$, row and column value sums, row and column
+bomb counts and the completion rule that requires every x2 and x3 to be revealed. Its first
+level also uses one level-1 composition from Voltorb Flip.
+
+The current cartridge separately defines:
+
+- additive safe-card scoring;
+- a countdown and value-dependent time rewards;
+- scanner rewards and previews;
+- Fold, which terminates the run with half of the current level score;
+- twelve sequential levels;
+- 6 x 6 boards on levels 9-12.
+
+The exact current rules and their mathematical state transitions are derived in
+[Mathematics of the Bomb Flip state machine](docs/mathematics.md). Probability conditioned on
+player knowledge and a Bellman formulation are kept there only as separate appendices because
+the cartridge does not implement either calculation. Historical and external sources are kept
+separately in [Sources and provenance](docs/references.md).
+
+Bomb Flip is an independent, unaffiliated cartridge. Pokémon and related names belong to their
+respective rights holders.
 
 ## Gameplay and controls
 
-Reveal every ×2 and ×3 without selecting a bomb. Safe cards add coins and time. From level 4, one or two safe cards also carry a hidden scanner reward that grants a limited number of previews. Fold ends the run and keeps half of the coins earned in the current level.
+Reveal every x2 and x3 without selecting a bomb. A safe card of value $v$ adds
+
+~~~math
+100v
+~~~
+
+coins to the exposed current-level score and
+
+~~~math
+3v
+~~~
+
+seconds, up to the 150-second cap.
+
+From level 4, one or two safe cells are also designated as hidden scanner rewards. Revealing one
+of those cells grants a number of scanner uses equal to its card value. A scanner use previews a
+selected hidden card but does not mark it as revealed.
+
+Fold ends the run and transfers
+
+~~~math
+\left\lfloor\frac S2\right\rfloor
+~~~
+
+from the current exposed level score $S$ into the final score. A bomb loses the current level
+score but preserves earlier banked levels; timeout resets the complete run score to zero.
 
 ![Bomb Flip gameplay: title, board navigation, Fold decision and safe-card reveals](docs/media/bomb-flip-gameplay.gif)
 
@@ -54,83 +110,94 @@ Reveal every ×2 and ×3 without selecting a bomb. Safe cards add coins and time
 | Open / close Fold | W or F | Select or R2 |
 | Confirm Fold | Z | A1 |
 
-E/Start begins a run but does not confirm Fold. Scanner preview and Fold confirmation are modal: the countdown and sequenced background music pause while they are open, so using an information or stopping action does not cost game time.
+E/Start begins a run but does not confirm Fold. Scanner preview and Fold confirmation use modal
+presentation loops. While either is open, the ordinary game update is not executed, so the game
+timer and sequenced background-music polling do not advance.
 
-## How a run evolves
+## Reading the model
 
-A new run generates the level-1 board only when the player leaves the title
-screen. Each level keeps two score quantities: `totalCoins` contains the score
-already banked from completed levels, while `levelCoins` contains the still
-exposed score earned on the current board. Write $S$ for this second amount.
+The documentation is organized by responsibility rather than by source-file order.
 
-During active play, the countdown advances before ordinary input is handled. A
-safe card of value $v$ adds $100v$ to `levelCoins` and $3v$ seconds, up to the
-150-second cap. The first three levels contain no scanner reward. On levels 4–8,
-one safe card is selected at random as a hidden scanner reward; on levels 9–12,
-two distinct safe cards are selected. Revealing one of these selected cards
-grants $v$ scanner uses. Revealing any other safe card grants only its ordinary
-coin and time rewards. A scanner use temporarily shows the selected hidden card
-without marking it as revealed.
+1. [Mathematics of the Bomb Flip state machine](docs/mathematics.md) derives board generation,
+   clues, completion, scanner metadata and the implemented score/time/phase transitions.
+2. [Code overview](docs/code-overview.md) maps those mathematical objects and operators back to
+   `state.h`, `board.c`, `game.c`, rendering and audio.
+3. [Validation](docs/validation.md) separates static compilation, targeted rule checks, RIVES
+   runtime evidence and properties not established by the current tests.
+4. [Sources and provenance](docs/references.md) keeps historical comparison, external solver
+   references and development attribution separate from implementation claims.
 
-The run then branches according to the event that occurs:
+The main mathematical document intentionally distinguishes the rules actually executed by the
+cartridge from optional external interpretations. Player-side conditional probability and
+Bellman optimization appear only after the code-derived model is complete.
 
-| Event | Effect on the current level | Final or subsequent state |
-| --- | --- | --- |
-| All ×2 and ×3 cards revealed | banks all `levelCoins`, then adds $\lfloor10t\rfloor$ from the remaining time $t$ | next level, or completion after level 12 |
-| Fold confirmed | banks $\lfloor S/2\rfloor$ | run ends with earlier completed levels preserved |
-| Bomb revealed | banks none of the current level | run ends with earlier completed levels preserved |
-| Countdown reaches zero | discards both current and previously banked score | run ends at zero |
+## Board model in one page
 
-These are not four presentations of one generic game-over flag. They are
-distinct transitions implemented by `GamePhase`, `GameEndState`,
-`totalCoins` and `levelCoins`. The complete derivation, including a numerical
-example, is in [How Bomb Flip turns clues into a timed decision problem](docs/mathematics.md).
+At level $\ell$, the active board is
+
+~~~math
+A=(a_{ij})\in\{0,1,2,3\}^{n(\ell)\times n(\ell)},
+~~~
+
+with
+
+~~~math
+n(\ell)=
+\begin{cases}
+5,&1\leq\ell\leq8,\\
+6,&9\leq\ell\leq12.
+\end{cases}
+~~~
+
+For row $i$ the cartridge displays
+
+~~~math
+s_i=\sum_j a_{ij},
+\qquad
+b_i=\sum_j[a_{ij}=0],
+~~~
+
+and columns use the analogous pair. If $R$ is the set of revealed cells, completion is exactly
+
+~~~math
+\{(i,j):a_{ij}\in\{2,3\}\}\subseteq R.
+~~~
+
+Scanner preview does not change $R$; this is why seeing a high card through the scanner does not
+complete it.
+
+![Worked Bomb Flip clue model for a 6 x 6 board](docs/media/bomb-flip-clue-model.svg)
+
+The diagram is a mathematical example compatible with level 9, not a screenshot of a fully
+revealed run.
 
 ## Reading the code
 
-Start with these files:
+The shortest implementation path is:
 
-1. `src/bombflip.c` owns the application loop and switches between title, transition, game and ending.
-2. `src/state.h` defines the complete game and application state.
-3. `src/game.c` contains the timer, input, scanner, Fold and outcome rules.
-4. `src/board.c` contains the twelve level compositions, generator and clues.
-5. `src/render.c` draws the board, interface and dialogs.
+1. `src/state.h` defines `GameState`, `GamePhase` and the fixed gameplay constants.
+2. `src/board.c` generates $A$, computes the clue map and assigns hidden scanner metadata.
+3. `src/game.c` applies the timer and action/phase transitions to the mutable run state.
+4. `src/bombflip.c` owns the application-level title, transition, game and ending modes.
+5. `src/render.c` and `src/title.c` present those states without defining the board rules.
+6. `src/audio.c` owns sequenced music and effects requested by the state transitions.
 
-`src/title.c` contains the title and transition animations. `src/audio.c` owns the sequencer and sound effects. Debug logging and the level-completion cheat are controlled independently by `DEBUG_MODE` and `CHEATS_ENABLED`, both disabled by default.
-
-The program is procedural C. The game phase is explicit, and `game_update()` shows the order in which timer, input, animations and terminal states are handled.
-
-## Board mathematics
-
-Represent the board by a matrix $A=(a_{ij})$ with entries in $\{0,1,2,3\}$. For row $i$,
-
-~~~math
-s_i=\sum_j a_{ij},\qquad
-b_i=\sum_j [a_{ij}=0],
-~~~
-
-and the column clues are defined in the same way. Because every non-bomb card is at least 1, a line of length $n$ is certainly free of ×2 and ×3 cards when
-
-~~~math
-s_i+b_i=n.
-~~~
-
-For Bomb Flip, $n=5$ in levels 1–8 and $n=6$ in levels 9–12. The equations are inherited from the source of inspiration; the additive score, time economy, scanner, Fold rule and extended level table are Bomb Flip-specific choices. The mathematical note derives how the clue constraints and those run-specific rules interact.
-
-![Worked Bomb Flip clue model for a 6 × 6 board](docs/media/bomb-flip-clue-model.svg)
-
-The diagram is a mathematical example compatible with level 9, not a screenshot of a fully revealed run.
+The program is procedural C. State is explicit and the phase dispatch makes the temporal order
+of rules visible rather than hiding it behind an object hierarchy.
 
 ## Building
 
-Running an existing cartridge requires [RIVEMU](https://rives.io/docs/riv/getting-started/). Compiling the C source also requires the [RIV SDK](https://rives.io/docs/riv/developing-cartridges/). The Makefile uses these default paths:
+Running an existing cartridge requires [RIVEMU](https://rives.io/docs/riv/getting-started/).
+Compiling the C source also requires the [RIV SDK](https://rives.io/docs/riv/developing-cartridges/).
+The Makefile uses these default paths:
 
 ~~~text
 ~/.riv/rivemu
 ~/.riv/rivos-sdk.ext2
 ~~~
 
-The repository deliberately does not vendor `riv.h`; builds use the API header supplied by the installed RIV SDK. Host-side `strict` and `test` checks copy that SDK header only into a temporary build directory.
+The repository does not vendor `riv.h`; builds use the API header supplied by the installed RIV
+SDK. Host-side `strict` and `test` checks copy that header only into a temporary build directory.
 
 Build and run:
 
@@ -155,18 +222,26 @@ make -C src strict test
 make -C src smoke
 ~~~
 
-`strict` compiles all production modules as warning-free C11 in release, debug and cheats configurations. `test` checks board invariants and game outcomes with a deterministic host test double. `smoke` starts the packaged cartridge headlessly for 180 frames. The latest recorded build and 96 MB runtime check used RIVEMU/libriv and RIV OS SDK 0.3.0; see [Validation](docs/validation.md).
+`strict` compiles the production modules as warning-free C11 in release, debug and cheats
+configurations. `test` exercises board invariants and gameplay transitions with deterministic
+RIVES doubles. `smoke` starts the packaged cartridge headlessly for 180 frames. See
+[Validation](docs/validation.md) for what each check does and does not establish.
 
 ## Documentation
 
-- [How Bomb Flip turns clues into a timed decision problem](docs/mathematics.md)
+- [Mathematics of the Bomb Flip state machine](docs/mathematics.md)
 - [Code overview](docs/code-overview.md)
 - [Validation](docs/validation.md)
+- [Sources and provenance](docs/references.md)
 - [Third-party notices](THIRD_PARTY_NOTICES.md)
 - [SEQT GPLv3 §7 exception](SEQT_EXCEPTION.md)
 
-Related project: [Slither Slide source](https://github.com/paolo-de-marinis/slither-slide) · [original Slither Slide cartridge](https://app.rives.io/cartridges/7654435bf067)
+Related project: [Slither Slide source](https://github.com/paolo-de-marinis/slither-slide) ·
+[original Slither Slide cartridge](https://app.rives.io/cartridges/7654435bf067)
 
 ## License
 
-Except for the third-party material listed in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md), the source, documentation and original assets are Copyright © 2024–2026 Paolo De Marinis and licensed under the [GNU General Public License, version 3 or later](LICENSE), with the narrow [SEQT additional permission](SEQT_EXCEPTION.md).
+Except for the third-party material listed in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md),
+the source, documentation and original assets are Copyright © 2024-2026 Paolo De Marinis and
+licensed under the [GNU General Public License, version 3 or later](LICENSE), with the narrow
+[SEQT additional permission](SEQT_EXCEPTION.md).

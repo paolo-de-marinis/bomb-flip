@@ -1,20 +1,34 @@
 # Bomb Flip code overview
 
-The shortest way to understand Bomb Flip is to follow one run, not to memorize
-six filenames. `bombflip.c` decides whether the application is on the title,
-transition, board or ending screen. Inside the board screen, `game.c` advances
-an explicit `GameState`; `board.c` supplies the hidden matrix and its clues. A
-terminal event then decides whether the current level is banked, halved, lost or
-used to reset the whole run.
+The code is easier to read after the mathematical state has been identified. Bomb Flip does not
+have one monolithic "game object" whose methods hide the rules. It keeps explicit C state and
+applies a small number of procedural transitions to it.
 
-The program is procedural C. State is explicit, and the update function reads
-like a state machine rather than hiding control flow behind an object framework.
-The mathematical meaning of that state is derived in
-[How Bomb Flip turns clues into a timed decision problem](mathematics.md).
+The mathematical document writes the gameplay projection as
 
-## Application loop
+~~~math
+\sigma=(\ell,A,R,G,B,S,t,u,\varphi).
+~~~
 
-`bombflip.c` defines an `Application` with four fields:
+The implementation distributes these components across `GameState`:
+
+- $\ell$: `level`;
+- $A$: `grid[y][x].value` on the active board;
+- $R$: the `revealed` flags;
+- $G$: `scannerX[]`, `scannerY[]` and `scannerCount`;
+- $B$: `totalCoins`;
+- $S$: `levelCoins`;
+- $t$: `timeRemaining`;
+- $u$: `scannerUses`;
+- $\varphi$: `phase`.
+
+Animation counters, selection, explosion state and presentation fields complete the concrete C
+state but are not needed in every mathematical rule. The derivation is in
+[Mathematics of the Bomb Flip state machine](mathematics.md).
+
+## 1. Application state and gameplay state are different layers
+
+`bombflip.c` owns the outer `Application`:
 
 ~~~c
 typedef struct {
@@ -25,139 +39,340 @@ typedef struct {
 } Application;
 ~~~
 
-`main()` configures the 256 × 256 RIVES console, initializes those fields and runs:
+`AppMode` distinguishes title, transition, active game and ending presentation. `GamePhase`,
+inside `GameState`, distinguishes states *within* a run such as active play, bomb reveal,
+timeout chain and level clearing.
 
-~~~c
-while (riv_present()) {
-    draw_current_frame(&app);
-    audio_poll(&app.audio);
-}
+The two enums therefore answer different questions:
+
+~~~math
+\text{AppMode}:\ \text{which application screen owns the frame?}
 ~~~
 
-`draw_current_frame()` switches between title, transition, active play and game-over screens. A board is generated when the player starts the run, not during application initialization.
+~~~math
+\text{GamePhase}:\ \text{which gameplay transition is currently allowed?}
+~~~
 
-## Game state
+This separation matters because a bomb reveal or timeout animation is still part of the game
+screen even though ordinary board actions are no longer accepted.
 
-`state.h` contains the constants and data types shared by the modules. `GameState` groups:
+## 2. `state.h` is the concrete state space
 
-- the 6 × 6 maximum board and its clues;
-- current level, banked score, exposed level score and countdown;
-- selection and reveal animation;
-- the explicit gameplay phase;
-- scanner positions and uses;
-- timeout, explosion and level-clear timers.
+`state.h` defines the fixed constants, `Tile`, `GameEndState`, `GamePhase`, `GameState` and
+`AppMode`.
 
-The fields are grouped by purpose rather than wrapped in accessor functions. This makes the complete state inspectable in one place and keeps the small modules easy to follow.
+A tile stores three quantities:
 
-Two fields must not be conflated. `totalCoins` contains score secured by earlier
-completed levels. `levelCoins` contains score earned on the current board and is
-still exposed to the current outcome. Completion transfers all of it, Fold
-transfers half, a bomb transfers none, and timeout clears `totalCoins` as well.
+~~~c
+typedef struct {
+    int value;
+    bool revealed;
+    int flipFrame;
+} Tile;
+~~~
 
-`GamePhase` separates active play from animations and terminal transitions:
+The first two have gameplay meaning; `flipFrame` is presentation state. The same pattern appears
+throughout `GameState`: score and timer coexist with animation counters because the program keeps
+one inspectable procedural state rather than splitting every concern into objects.
 
-- `GAME_PHASE_ACTIVE`;
-- bomb reveal;
-- timeout explosion chain;
-- level clearing and cleared panel;
-- next level;
-- finished.
+Two score fields must remain distinct:
 
-`game_update()` switches on this phase before reading ordinary input. Bomb, timeout and level-clear sequences therefore advance without also running the countdown or accepting board actions.
+~~~math
+B=\texttt{totalCoins},
+\qquad
+S=\texttt{levelCoins}.
+~~~
 
-## Board generation and clues
+$B$ is already banked. $S$ is still exposed to the current level outcome. Bomb, Fold, Timeout
+and completion differ mainly in how they transform this pair.
 
-`board.c` contains the twelve `LevelConfig` entries. Each configuration records only the number of ×2 cards, ×3 cards and bombs; the remaining cells are ×1.
+## 3. `board.c` constructs the static part of one level
 
-`board_initialize()` performs four steps:
+For a fixed level, `board_initialize()` applies
 
-1. clear the fixed-capacity grid;
-2. place the configured non-×1 cards at random unused positions;
-3. calculate row and column clues;
-4. assign the scanner rewards required by the current level: none on levels 1–3, one on levels 4–8 and two on levels 9–12.
+~~~math
+\text{clear}
+\longrightarrow
+\text{place values}
+\longrightarrow
+\text{compute clues}
+\longrightarrow
+\text{assign scanner metadata}.
+~~~
 
-The assignment happens after the board values have been generated. Each scanner
-reward is attached to a randomly selected safe cell, and the coordinates remain
-hidden until that card is revealed. A deterministic row-major fallback is used
-only if the random search fails one hundred times. When two rewards are present,
-their cells are safe and distinct.
+### 3.1 Active board size
 
-The scanner coordinates do not replace tile values, and an ordinary safe card
-does not grant a scanner use. Only a safe cell selected as a scanner reward does
-so: when revealed, a scanner card of value $v$ adds $v$ uses. Each use can
-preview another selected card, but previewing does not set that tile's
-`revealed` field.
+`board_grid_size()` returns 5 on levels 1-8 and 6 on levels 9-12. The physical array remains
+6 x 6; inactive cells are set to `-1`.
 
-`board_all_high_cards_flipped()` implements the completion rule directly by scanning for an unrevealed ×2 or ×3.
+### 3.2 Fixed-count value generation
 
-## Active-play update
+`LEVEL_CONFIGS` stores x2, x3 and bomb counts. `board_clear()` initializes active cells as x1,
+and `place_level_cards()` replaces random free cells until the configured counts have been
+placed.
 
-The normal active frame in `game_update()` is:
+The clue arrays are then computed directly from the resulting values. No deduction engine is
+involved: row/column sums and bomb counts are deterministic aggregates of the hidden board.
+
+### 3.3 Scanner metadata is not a tile value
+
+`board_assign_scanner_tiles()` runs after values and clues exist. A scanner reward is represented
+by coordinates stored separately from `Tile.value`.
+
+The progression is:
+
+~~~math
+0\text{ rewards on }1\!:\!3,
+\qquad
+1\text{ on }4\!:\!8,
+\qquad
+2\text{ on }9\!:\!12.
+~~~
+
+A reward coordinate must point to a safe cell and two reward coordinates must be distinct. The
+ordinary path uses random search; after one hundred unsuccessful attempts the function uses a
+row-major fallback.
+
+This is why "safe card" and "scanner card" are not synonymous. Scanner status is hidden
+metadata attached to selected safe cells.
+
+## 4. Level initialization resets only level-local state
+
+`initialize_level()` first calls `reset_level_state()`, which clears
+
+- `levelCoins`;
+- phase and end-state presentation counters;
+- scanner uses and scanner coordinates;
+- level-local animation state.
+
+It then generates a new board and initializes
+
+~~~math
+t_0(\ell)=45+5(\ell-1).
+~~~
+
+`totalCoins` is not reset here. It is banked run state and survives progression between completed
+levels.
+
+A new run is different: `game_begin_run()` resets the level to 1, `totalCoins` to zero and the
+run-wide card count before initializing level 1.
+
+## 5. `game_update()` is a phase-dispatched transition system
+
+`game_update()` first inspects `GamePhase`. Non-active phases advance their own animation or
+transition and return without executing ordinary board input.
+
+The active path then has an order that is part of the rules:
 
 1. decrement the timer;
-2. process movement, reveal or Fold input;
+2. process directional movement, reveal or Fold input;
 3. advance flip animations;
-4. process the optional cheat;
+4. process the optional level-completion cheat;
 5. process scanner input.
 
-Each step may return early when it changes the phase. For example, selecting a bomb enters `GAME_PHASE_BOMB_REVEAL` before any Fold input can be accepted.
+Each stage can return early when it changes the phase. This prevents later actions in the same
+frame from running after a terminal or clearing transition.
 
-`game_reveal_selected()` handles one tile:
+For example, if Reveal selects a bomb, `game_reveal_selected()` enters
+`GAME_PHASE_BOMB_REVEAL`; Fold and scanner handling are not then allowed to reinterpret that
+same frame.
 
-- bombs start the reveal/explosion sequence;
-- safe cards add `100 * value` coins and `3 * value` seconds;
-- a designated scanner card adds a number of uses equal to its value;
-- revealing the last required high card banks the level score and starts the clear sequence.
+## 6. Reveal operator
 
-The countdown is capped at 150 seconds.
+`game_reveal_selected()` is the main board-state transition.
 
-## Fold and scanner timing
+For an unrevealed selected tile it first:
 
-Fold confirmation and scanner preview use small modal `riv_present()` loops. While either loop is open, `game_update()` and `audio_poll()` are not called. This freezes the countdown and sequenced music by design.
+1. sets `revealed = true`;
+2. starts its flip animation;
+3. increments `totalCardsFlipped`;
+4. checks whether that coordinate is one of the hidden scanner rewards.
 
-Fold banks half of `levelCoins` using integer division. A bomb preserves previously banked levels but loses the unbanked current level. Timeout sets the entire run score to zero.
+If the tile is a scanner reward of value $v$, it adds $v$ to `scannerUses`.
 
-The scanner temporarily animates the selected card face up, waits for the preview interval and turns it face down again. The card is not marked as revealed.
+### Bomb
 
-## Rendering
+For `value == 0`, the function enters `GAME_PHASE_BOMB_REVEAL`, records the explosion cell,
+stops background music and returns. It does **not** add `levelCoins` to `totalCoins`.
 
-`render.c` draws the board from `GameState` without changing it. The main groups are:
+The later bomb phase eventually calls `game_finish(..., GAME_END_BOMB, ...)`, so the run ends
+with the earlier banked score only.
 
-- tiles, coins, bombs and scanner marks;
-- row and column clues;
-- score, level and timer;
-- bomb and timeout explosions;
-- scanner overlay;
-- Fold, completion and game-over panels.
+### Safe card
 
-`title.c` owns the standard title, transition and easter-egg animation. Keeping it outside `render.c` prevents the gameplay renderer from also becoming an application-state module.
+For `value == v > 0`, the function applies
 
-## Audio
+~~~math
+S\leftarrow S+100v,
+~~~
 
-`audio.c` owns the SEQT player and all waveform descriptions. `audio_poll()` is called once per ordinary application frame; the gameplay module only starts or stops background music and requests named effects.
+~~~math
+t\leftarrow\min(150,t+3v).
+~~~
 
-## Outcard
+It then evaluates `board_all_high_cards_flipped()`.
 
-`game_update_outcard()` writes:
+If high cards remain, the phase stays active. If none remain, the current `levelCoins` is added
+to `totalCoins` immediately and the phase becomes `GAME_PHASE_LEVEL_CLEARING`.
+
+## 7. Completion is split across two phase transitions
+
+Completion is not one function call.
+
+The last required high-card reveal first banks the complete current card score and enters
+`GAME_PHASE_LEVEL_CLEARING`.
+
+`update_level_clearing()` then reveals the remaining cards for presentation, waits for their
+animations and the clear delay, and computes
+
+~~~math
+\texttt{timeBonus}=\lfloor10\,\texttt{timeRemaining}\rfloor.
+~~~
+
+That bonus is added to both `totalCoins` and `levelCoins`, then the phase becomes
+`GAME_PHASE_LEVEL_CLEARED`.
+
+`update_cleared_level()` waits for the cleared panel. It either enters `GAME_PHASE_NEXT_LEVEL`
+or, on level 12, calls `game_finish(..., GAME_END_COMPLETE, ...)`.
+
+The mathematical total
+
+~~~math
+B+S+\lfloor10t\rfloor
+~~~
+
+is therefore implemented by several temporally separated code steps.
+
+## 8. Bomb, Fold and Timeout are distinct terminal maps
+
+`game_finish()` records the end state and moves to `GAME_PHASE_FINISHED`, but its score update
+depends on the outcome.
+
+### Bomb
+
+No score transfer occurs in `GAME_END_BOMB`:
+
+~~~math
+(B,S)\longmapsto B\text{ as final score}.
+~~~
+
+### Fold
+
+`GAME_END_FOLD` computes
+
+~~~math
+\texttt{foldedCoins}=S/2
+~~~
+
+with integer division and applies
+
+~~~math
+B\leftarrow B+\left\lfloor\frac S2\right\rfloor.
+~~~
+
+### Timeout
+
+`GAME_END_TIMEOUT` sets
+
+~~~math
+B=0,
+\qquad
+S=0,
+\qquad
+t=0.
+~~~
+
+The timeout explosion chain happens before this final call, but ordinary active input does not
+resume during the chain.
+
+## 9. Scanner preview is presentation without reveal
+
+`game_scanner_is_available()` requires:
+
+- active phase;
+- scanner metadata present for the level;
+- at least one available use;
+- incomplete high-card objective.
+
+`use_scanner()` refuses an already revealed tile. Otherwise it sets `scannerInUse`, animates the
+selected card face up, holds the preview and animates it face down again.
+
+It never writes
+
+~~~c
+tile->revealed = true;
+~~~
+
+and only after the preview does it decrement `scannerUses`.
+
+Thus scanner preview changes the use count and temporary presentation state but not the revealed
+set used by completion.
+
+The code stores no permanent memo of the previewed value.
+
+## 10. Fold and scanner loops pause the ordinary state machine
+
+Both Fold confirmation and scanner preview contain nested `riv_present()` loops. These loops own
+presentation temporarily instead of returning to the application's ordinary outer frame.
+
+Consequently, while they are open:
+
+- `game_update()` is not called;
+- `update_timer()` is not called;
+- `audio_poll()` is not called.
+
+The timer pause is therefore a direct consequence of control flow, not a separate timer flag.
+
+## 11. Rendering reads state; it does not define the rules
+
+`render.c` draws `GameState`: board cells, clue panels, selection, score, timer, scanners,
+explosions and terminal overlays.
+
+`title.c` owns title, transition and easter-egg presentation. Keeping title state outside the
+board renderer prevents application navigation from being folded into the gameplay transition
+logic.
+
+The code does contain animation state inside `GameState`, but the hidden board values, revealed
+flags, score transfers and completion predicate are defined outside rendering.
+
+## 12. Audio follows state transitions
+
+`audio.c` owns the SEQT player and waveform descriptions. Gameplay code requests named effects
+or starts/stops background playback at transition points.
+
+The ordinary application loop calls `audio_poll()` once after drawing. Modal Fold/scanner loops
+do not return to that outer poll, which is why sequenced music pauses together with the game
+timer during those interfaces.
+
+## 13. Outcard is a projection of run state
+
+`game_update_outcard()` serializes
 
 ~~~json
 {"score":0,"level":1,"cards_flipped":0,"time_remaining":45.00}
 ~~~
 
-The outcard is refreshed during active play and again when the run ends.
+using `totalCoins`, `level`, `totalCardsFlipped` and `timeRemaining`.
 
-## Build flags
+The outcard therefore exposes a selected projection of `GameState`; it does not serialize the
+hidden board, scanner coordinates or unbanked `levelCoins`.
 
-`DEBUG_MODE` and `CHEATS_ENABLED` default independently to zero:
+## 14. Build flags
+
+`DEBUG_MODE` and `CHEATS_ENABLED` default independently to zero.
 
 - debug mode adds diagnostic messages;
-- cheats add the R1 level-completion helper;
-- neither flag changes the ordinary control mapping when disabled.
+- cheats add the R1 completion helper;
+- neither changes the ordinary control mapping when disabled.
 
-## Tests
+The cheat helper uses production state and phase transitions but is excluded from normal builds.
 
-`tests/test_board.c` checks every level composition, clue totals, completion and
-the complete scanner progression, including its absence before level 4.
-`tests/test_game.c` exercises Fold, bomb, timeout, scanner, modal timing,
-simultaneous inputs and the cheat completion path with a deterministic RIVES
-test double.
+## 15. Tests
+
+The host suite is intentionally smaller than the full state space.
+
+`tests/test_board.c` checks board compositions, clues, completion and scanner placement.
+`tests/test_game.c` checks selected score, timing, modal and phase-transition behaviors with a
+deterministic RIVES test double.
+
+The exact evidentiary scope of those tests is described in [Validation](validation.md).
